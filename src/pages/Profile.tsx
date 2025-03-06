@@ -4,25 +4,20 @@ import { useState } from 'react';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import BottomNavigation from '../components/BottomNavigation';
-import { UserRound, Settings, Heart, Star, LogOut, Pencil, Users } from 'lucide-react';
+import { UserRound, Settings, Share, Pencil, Users } from 'lucide-react';
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { useNavigate } from 'react-router-dom';
 
 type FollowType = 'followers' | 'following';
 
 const Profile = () => {
   const [showFollowDialog, setShowFollowDialog] = useState(false);
   const [followType, setFollowType] = useState<FollowType>('followers');
+  const navigate = useNavigate();
   
-  const profileItems = [
-    { icon: Settings, label: 'Settings', action: () => toast.info('Settings clicked') },
-    { icon: Heart, label: 'Favorites', action: () => toast.info('Favorites clicked') },
-    { icon: Star, label: 'Premium', action: () => toast.info('Premium clicked') },
-    { icon: LogOut, label: 'Log out', action: () => toast.info('Log out clicked') },
-  ];
-
   const followers = [
     { id: 1, name: 'Alex Johnson', avatar: null },
     { id: 2, name: 'Maria Garcia', avatar: null },
@@ -48,11 +43,40 @@ const Profile = () => {
     toast.info('Edit profile functionality coming soon');
   };
 
+  const handleOpenSettings = () => {
+    navigate('/settings');
+  };
+
+  const handleShareProfile = () => {
+    toast.info('Share profile functionality coming soon');
+  };
+
   return (
     <div className="min-h-screen">
       <Header />
       
       <main className="container max-w-6xl pt-24 pb-24 px-6 mx-auto">
+        {/* Settings and Share buttons */}
+        <div className="flex justify-between max-w-3xl mx-auto mb-4">
+          <motion.button
+            className="p-2 rounded-full bg-toon-blue/10 flex items-center justify-center"
+            onClick={handleOpenSettings}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <Settings className="w-5 h-5 text-toon-blue" />
+          </motion.button>
+          
+          <motion.button
+            className="p-2 rounded-full bg-toon-blue/10 flex items-center justify-center"
+            onClick={handleShareProfile}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <Share className="w-5 h-5 text-toon-blue" />
+          </motion.button>
+        </div>
+        
         <motion.div 
           className="flex flex-col items-center justify-center max-w-3xl mx-auto mb-8"
           initial={{ opacity: 0, y: -20 }}
@@ -101,24 +125,6 @@ const Profile = () => {
             </motion.button>
           </div>
         </motion.div>
-        
-        <div className="max-w-md mx-auto">
-          {profileItems.map((item, index) => (
-            <motion.div
-              key={item.label}
-              className="flex items-center gap-4 p-4 hover:bg-gray-50 rounded-lg transition-colors cursor-pointer mb-2"
-              onClick={item.action}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: 0.1 * index }}
-            >
-              <div className="p-2 rounded-full bg-toon-blue/10">
-                <item.icon className="w-5 h-5 text-toon-blue" />
-              </div>
-              <span className="font-medium">{item.label}</span>
-            </motion.div>
-          ))}
-        </div>
       </main>
       
       <Dialog open={showFollowDialog} onOpenChange={setShowFollowDialog}>
