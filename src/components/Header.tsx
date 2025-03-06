@@ -1,7 +1,8 @@
 
 import { AnimatePresence, motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
-import { Sparkles, Search, Bell } from 'lucide-react';
+import { Sparkles, Search, Bell, UserRound } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const Header = () => {
   const [scrolled, setScrolled] = useState(false);
@@ -25,16 +26,16 @@ const Header = () => {
       transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
     >
       <div className="container max-w-6xl mx-auto flex justify-between items-center">
-        {/* Search icon on the left */}
+        {/* Profile icon on the left */}
         <motion.div 
           className="flex items-center"
           initial={{ opacity: 0, x: -10 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.1, duration: 0.5 }}
         >
-          <button className="p-2 rounded-full hover:bg-gray-100/50 transition-colors">
-            <Search className="w-5 h-5" />
-          </button>
+          <Link to="/profile" className="p-2 rounded-full hover:bg-gray-100/50 transition-colors">
+            <UserRound className="w-5 h-5" />
+          </Link>
         </motion.div>
         
         {/* App name in the center */}
@@ -48,13 +49,16 @@ const Header = () => {
           <span className="font-semibold text-xl tracking-tight">Toonify</span>
         </motion.div>
         
-        {/* Notification icon on the right */}
+        {/* Search and notification icons on the right */}
         <motion.div 
-          className="flex items-center"
+          className="flex items-center gap-2"
           initial={{ opacity: 0, x: 10 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.1, duration: 0.5 }}
         >
+          <button className="p-2 rounded-full hover:bg-gray-100/50 transition-colors">
+            <Search className="w-5 h-5" />
+          </button>
           <button className="p-2 rounded-full hover:bg-gray-100/50 transition-colors">
             <Bell className="w-5 h-5" />
           </button>

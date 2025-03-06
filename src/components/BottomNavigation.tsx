@@ -1,8 +1,8 @@
 
 import { motion } from 'framer-motion';
-import { Home, Film, Upload, Briefcase, UserRound } from 'lucide-react';
+import { Home, Film, Upload, Briefcase, MessageCircle } from 'lucide-react';
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 
 type NavItem = {
   icon: React.ElementType;
@@ -11,14 +11,19 @@ type NavItem = {
 };
 
 const BottomNavigation = () => {
-  const [activeItem, setActiveItem] = useState('home');
+  const location = useLocation();
+  const [activeItem, setActiveItem] = useState(() => {
+    const path = location.pathname;
+    if (path === '/') return 'home';
+    return path.substring(1); // Remove the leading slash
+  });
   
   const navItems: NavItem[] = [
     { icon: Home, label: 'Home', href: '/' },
-    { icon: Film, label: 'Clips', href: '#clips' },
-    { icon: Upload, label: 'Upload', href: '#upload' },
-    { icon: Briefcase, label: 'Jobs', href: '#jobs' },
-    { icon: UserRound, label: 'Profile', href: '#profile' },
+    { icon: Film, label: 'Clips', href: '/clips' },
+    { icon: Upload, label: 'Upload', href: '/upload' },
+    { icon: Briefcase, label: 'Jobs', href: '/jobs' },
+    { icon: MessageCircle, label: 'Message', href: '/message' },
   ];
   
   return (
