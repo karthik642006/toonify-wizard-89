@@ -2,10 +2,12 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
 import { Sparkles, Search, Bell, UserRound } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 
 const Header = () => {
   const [scrolled, setScrolled] = useState(false);
+  const navigate = useNavigate();
   
   useEffect(() => {
     const handleScroll = () => {
@@ -15,6 +17,18 @@ const Header = () => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  const handleSearchClick = () => {
+    toast.info('Search functionality coming soon');
+  };
+
+  const handleNotificationClick = () => {
+    toast.info('Notifications coming soon');
+  };
+
+  const handleProfileClick = () => {
+    navigate('/profile');
+  };
 
   return (
     <motion.header 
@@ -33,9 +47,12 @@ const Header = () => {
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.1, duration: 0.5 }}
         >
-          <Link to="/profile" className="p-2 rounded-full hover:bg-gray-100/50 transition-colors">
+          <button 
+            onClick={handleProfileClick} 
+            className="p-2 rounded-full hover:bg-gray-100/50 transition-colors"
+          >
             <UserRound className="w-5 h-5" />
-          </Link>
+          </button>
         </motion.div>
         
         {/* App name in the center */}
@@ -56,10 +73,16 @@ const Header = () => {
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.1, duration: 0.5 }}
         >
-          <button className="p-2 rounded-full hover:bg-gray-100/50 transition-colors">
+          <button 
+            className="p-2 rounded-full hover:bg-gray-100/50 transition-colors"
+            onClick={handleSearchClick}
+          >
             <Search className="w-5 h-5" />
           </button>
-          <button className="p-2 rounded-full hover:bg-gray-100/50 transition-colors">
+          <button 
+            className="p-2 rounded-full hover:bg-gray-100/50 transition-colors"
+            onClick={handleNotificationClick}
+          >
             <Bell className="w-5 h-5" />
           </button>
         </motion.div>
