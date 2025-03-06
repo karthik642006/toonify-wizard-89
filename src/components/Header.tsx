@@ -1,7 +1,7 @@
 
 import { AnimatePresence, motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, Search, Bell } from 'lucide-react';
 
 const Header = () => {
   const [scrolled, setScrolled] = useState(false);
@@ -25,41 +25,40 @@ const Header = () => {
       transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
     >
       <div className="container max-w-6xl mx-auto flex justify-between items-center">
+        {/* Search icon on the left */}
         <motion.div 
-          className="flex items-center gap-2"
+          className="flex items-center"
           initial={{ opacity: 0, x: -10 }}
           animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.1, duration: 0.5 }}
+        >
+          <button className="p-2 rounded-full hover:bg-gray-100/50 transition-colors">
+            <Search className="w-5 h-5" />
+          </button>
+        </motion.div>
+        
+        {/* App name in the center */}
+        <motion.div 
+          className="flex items-center gap-2"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
           transition={{ delay: 0.1, duration: 0.5 }}
         >
           <Sparkles className="w-6 h-6 text-toon-blue" />
           <span className="font-semibold text-xl tracking-tight">Toonify</span>
         </motion.div>
         
-        <motion.nav 
-          className="flex gap-6"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.2, duration: 0.5 }}
+        {/* Notification icon on the right */}
+        <motion.div 
+          className="flex items-center"
+          initial={{ opacity: 0, x: 10 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.1, duration: 0.5 }}
         >
-          <a 
-            href="#" 
-            className="text-sm font-medium hover:text-toon-blue transition-colors px-3 py-2 rounded-md"
-          >
-            Home
-          </a>
-          <a 
-            href="#gallery" 
-            className="text-sm font-medium hover:text-toon-blue transition-colors px-3 py-2 rounded-md"
-          >
-            Gallery
-          </a>
-          <a 
-            href="#about" 
-            className="text-sm font-medium hover:text-toon-blue transition-colors px-3 py-2 rounded-md"
-          >
-            About
-          </a>
-        </motion.nav>
+          <button className="p-2 rounded-full hover:bg-gray-100/50 transition-colors">
+            <Bell className="w-5 h-5" />
+          </button>
+        </motion.div>
       </div>
     </motion.header>
   );

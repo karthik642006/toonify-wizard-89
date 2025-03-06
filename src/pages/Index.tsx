@@ -1,8 +1,6 @@
-
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
-import { v4 as uuidv4 } from 'uuid';
 
 import Header from '../components/Header';
 import ImageUploader from '../components/ImageUploader';
@@ -10,6 +8,7 @@ import StyleSelector, { ToonStyle } from '../components/StyleSelector';
 import TransformPreview from '../components/TransformPreview';
 import Gallery, { GalleryItem } from '../components/Gallery';
 import Footer from '../components/Footer';
+import BottomNavigation from '../components/BottomNavigation';
 
 import { 
   toonStyles, 
@@ -32,31 +31,26 @@ const Index = () => {
     timestamp: ''
   });
 
-  // Load gallery items from local storage on mount
   useEffect(() => {
     setGalleryItems(getGalleryItems());
   }, []);
 
-  // Handle image selection
   const handleImageSelect = (file: File, preview: string) => {
     setSelectedImage({ file, preview });
     setTransformedImage(null);
     setActiveView('upload');
   };
 
-  // Handle image clearing
   const handleClearImage = () => {
     setSelectedImage(null);
     setTransformedImage(null);
     setActiveView('upload');
   };
 
-  // Handle style selection
   const handleStyleSelect = (styleId: string) => {
     setSelectedStyle(styleId);
   };
 
-  // Handle image transformation
   const handleTransform = async () => {
     if (!selectedImage) {
       toast.error('Please select an image first');
@@ -70,16 +64,13 @@ const Index = () => {
       
       setTransformedImage(result);
       
-      // Get style name
       const style = toonStyles.find(s => s.id === selectedStyle);
       
-      // Update transformation details
       setTransformation({
         styleName: style?.name || 'Custom',
         timestamp: new Date().toISOString()
       });
       
-      // Save to gallery
       const galleryItem = saveTransformedImage(selectedImage.preview, result, selectedStyle);
       setGalleryItems(prevItems => [galleryItem, ...prevItems]);
       
@@ -94,7 +85,6 @@ const Index = () => {
     }
   };
 
-  // Handle image download
   const handleDownload = () => {
     if (!transformedImage) return;
     
@@ -105,14 +95,12 @@ const Index = () => {
     toast.success('Image downloaded');
   };
 
-  // Handle gallery item download
   const handleGalleryItemDownload = (item: GalleryItem) => {
     const filename = `toonify-${item.styleName.toLowerCase()}-${Date.now()}.jpg`;
     downloadImage(item.transformed, filename);
     toast.success('Image downloaded');
   };
 
-  // Handle gallery item deletion
   const handleGalleryItemDelete = (itemId: string) => {
     deleteGalleryItem(itemId);
     setGalleryItems(prevItems => prevItems.filter(item => item.id !== itemId));
@@ -124,7 +112,7 @@ const Index = () => {
       <Header />
       
       <main className="container max-w-6xl pt-24 pb-12 px-6 mx-auto">
-        <section className="mb-20">
+        <section id="upload" className="mb-20">
           <motion.div 
             className="text-center max-w-3xl mx-auto mb-12"
             initial={{ opacity: 0, y: -20 }}
@@ -265,6 +253,7 @@ const Index = () => {
       </main>
       
       <Footer />
+      <BottomNavigation />
     </div>
   );
 };
