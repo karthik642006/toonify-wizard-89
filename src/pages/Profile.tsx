@@ -48,7 +48,12 @@ const Profile = () => {
   };
 
   const handleShareProfile = () => {
-    toast.info('Share profile functionality coming soon');
+    // Simulate sharing by showing a success toast
+    const profileUrl = window.location.href;
+    // In a real app, you might use the native share API or copy to clipboard
+    navigator.clipboard.writeText(profileUrl)
+      .then(() => toast.success('Profile link copied to clipboard!'))
+      .catch(err => toast.error('Could not copy the profile link'));
   };
 
   return (
@@ -63,6 +68,7 @@ const Profile = () => {
             onClick={handleOpenSettings}
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.95 }}
+            aria-label="Settings"
           >
             <Settings className="w-5 h-5 text-toon-blue" />
           </motion.button>
@@ -72,6 +78,7 @@ const Profile = () => {
             onClick={handleShareProfile}
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.95 }}
+            aria-label="Share profile"
           >
             <Share className="w-5 h-5 text-toon-blue" />
           </motion.button>
@@ -92,6 +99,7 @@ const Profile = () => {
               onClick={handleEditProfile}
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.95 }}
+              aria-label="Edit profile"
             >
               <Pencil className="w-4 h-4 text-toon-blue" />
             </motion.button>

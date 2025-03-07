@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import BottomNavigation from '../components/BottomNavigation';
-import { Settings as SettingsIcon, Heart, Star, LogOut } from 'lucide-react';
+import { Settings as SettingsIcon, Heart, Star, LogOut, Users } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 
@@ -14,6 +14,7 @@ const Settings = () => {
   const settingsItems = [
     { icon: Heart, label: 'Favorites', action: () => toast.info('Favorites clicked') },
     { icon: Star, label: 'Premium', action: () => toast.info('Premium clicked') },
+    { icon: Users, label: 'Create Group', action: () => toast.info('Create Group functionality coming soon') },
     { icon: LogOut, label: 'Log out', action: () => toast.info('Log out clicked') },
   ];
 
