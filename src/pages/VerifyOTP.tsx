@@ -1,17 +1,19 @@
 
 import { motion } from 'framer-motion';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from 'sonner';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
+import { AuthContext } from '../App';
 
 const VerifyOTP = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const email = location.state?.email || '';
+  const { login } = useContext(AuthContext);
   
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [isLoading, setIsLoading] = useState(false);
@@ -80,6 +82,8 @@ const VerifyOTP = () => {
     setTimeout(() => {
       setIsLoading(false);
       toast.success('Account verified successfully');
+      // Log the user in and navigate to home page
+      login();
       navigate('/');
     }, 1500);
   };

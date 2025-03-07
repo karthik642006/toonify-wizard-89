@@ -1,6 +1,6 @@
 
 import { motion } from 'framer-motion';
-import { useState } from 'react';
+import { useState, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Mail, Lock, User, LogIn } from 'lucide-react';
 import { Input } from "@/components/ui/input";
@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from 'sonner';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
+import { AuthContext } from '../App';
 
 const SignUp = () => {
   const [name, setName] = useState('');
@@ -16,6 +17,7 @@ const SignUp = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const { login } = useContext(AuthContext);
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
