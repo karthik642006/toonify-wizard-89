@@ -4,13 +4,14 @@ import { useState } from 'react';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import BottomNavigation from '../components/BottomNavigation';
-import { UserRound, Settings, Share, Pencil, Users, X, Camera, Check } from 'lucide-react';
+import { UserRound, Settings, Share, Pencil, Users, X, Camera, Check, ImageIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
+import ImageUploader from '../components/ImageUploader';
 
 type FollowType = 'followers' | 'following';
 
@@ -18,10 +19,13 @@ const Profile = () => {
   const [showFollowDialog, setShowFollowDialog] = useState(false);
   const [followType, setFollowType] = useState<FollowType>('followers');
   const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showProfilePictureDialog, setShowProfilePictureDialog] = useState(false);
   const [profileName, setProfileName] = useState('John Doe');
   const [profileEmail, setProfileEmail] = useState('user@example.com');
   const [editName, setEditName] = useState('');
   const [editEmail, setEditEmail] = useState('');
+  const [profilePicture, setProfilePicture] = useState<string | null>(null);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const navigate = useNavigate();
   
   const followers = [
@@ -51,6 +55,10 @@ const Profile = () => {
     setShowEditDialog(true);
   };
 
+  const handleEditProfilePicture = () => {
+    setShowProfilePictureDialog(true);
+  };
+
   const handleSaveProfile = () => {
     if (!editName.trim()) {
       toast.error('Name cannot be empty');
@@ -66,6 +74,24 @@ const Profile = () => {
     setProfileEmail(editEmail);
     setShowEditDialog(false);
     toast.success('Profile updated successfully');
+  };
+
+  const handleSaveProfilePicture = () => {
+    if (selectedImage) {
+      setProfilePicture(selectedImage);
+      setShowProfilePictureDialog(false);
+      toast.success('Profile picture updated successfully');
+    } else {
+      toast.error('Please select an image');
+    }
+  };
+
+  const handleImageSelect = (file: File, preview: string) => {
+    setSelectedImage(preview);
+  };
+
+  const handleClearImage = () => {
+    setSelectedImage(null);
   };
 
   const handleOpenSettings = () => {
@@ -115,15 +141,28 @@ const Profile = () => {
           transition={{ duration: 0.6 }}
         >
           <div className="relative">
-            <div className="w-32 h-32 rounded-full bg-toon-blue/10 flex items-center justify-center mb-6">
-              <UserRound className="w-16 h-16 text-toon-blue" />
+            <div 
+              className="w-32 h-32 rounded-full bg-toon-blue/10 flex items-center justify-center mb-6 overflow-hidden" 
+              onClick={handleEditProfilePicture}
+            >
+              {profilePicture ? (
+                <img 
+                  src={profilePicture} 
+                  alt={profileName} 
+                  className="w-full h-full object-cover" 
+                />
+              ) : (
+                <UserRound className="w-16 h-16 text-toon-blue" />
+              )}
             </div>
+            
+            {/* Edit profile picture button (top right) */}
             <motion.button
-              className="absolute bottom-6 right-0 p-2 rounded-full bg-white shadow-md hover:bg-gray-50 transition-colors"
-              onClick={handleEditProfile}
+              className="absolute top-0 right-0 p-2 rounded-full bg-white shadow-md hover:bg-gray-50 transition-colors"
+              onClick={handleEditProfilePicture}
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.95 }}
-              aria-label="Edit profile"
+              aria-label="Edit profile picture"
             >
               <Pencil className="w-4 h-4 text-toon-blue" />
             </motion.button>
@@ -207,17 +246,6 @@ const Profile = () => {
             </DialogTitle>
           </DialogHeader>
           <div className="pt-4">
-            <div className="flex justify-center mb-6">
-              <div className="relative">
-                <div className="w-24 h-24 rounded-full bg-toon-blue/10 flex items-center justify-center">
-                  <UserRound className="w-12 h-12 text-toon-blue" />
-                </div>
-                <div className="absolute bottom-0 right-0 p-1 rounded-full bg-toon-blue text-white">
-                  <Camera className="w-4 h-4" />
-                </div>
-              </div>
-            </div>
-            
             <div className="space-y-4">
               <div>
                 <label htmlFor="profileName" className="block text-sm font-medium text-gray-700 mb-1">
@@ -250,6 +278,56 @@ const Profile = () => {
               >
                 <Check className="mr-2 h-4 w-4" />
                 Save Changes
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Profile Picture Dialog */}
+      <Dialog open={showProfilePictureDialog} onOpenChange={setShowProfilePictureDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center justify-between">
+              <span>Change Profile Picture</span>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={() => setShowProfilePictureDialog(false)}
+                className="h-8 w-8"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </DialogTitle>
+          </DialogHeader>
+          <div className="pt-4">
+            <div className="flex justify-center mb-4">
+              <div className="flex flex-col items-center gap-2 w-full">
+                <ImageUploader 
+                  onImageSelect={handleImageSelect} 
+                  selectedImage={selectedImage} 
+                  onClearImage={handleClearImage} 
+                />
+                <p className="text-xs text-gray-500 text-center mt-2">
+                  Upload a photo from your device or take a new one with your camera
+                </p>
+              </div>
+            </div>
+            
+            <div className="flex gap-2 justify-end mt-6">
+              <Button 
+                variant="outline" 
+                onClick={() => setShowProfilePictureDialog(false)}
+              >
+                Cancel
+              </Button>
+              <Button 
+                className="bg-toon-blue hover:bg-toon-blue/90"
+                onClick={handleSaveProfilePicture}
+                disabled={!selectedImage}
+              >
+                <Check className="mr-2 h-4 w-4" />
+                Save Picture
               </Button>
             </div>
           </div>
