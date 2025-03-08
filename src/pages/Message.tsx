@@ -8,7 +8,6 @@ import { MessageCircle, Search, UserRound, SendHorizontal } from 'lucide-react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const Message = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -22,23 +21,16 @@ const Message = () => {
     { id: 5, name: 'Carlos Rodriguez', hasStory: true },
   ];
 
-  // Sample followers and following data
-  const followers = [
-    { id: 1, name: 'Alex Johnson', avatar: null, lastMessage: 'Hey, how are you?' },
-    { id: 2, name: 'Maria Garcia', avatar: null, lastMessage: 'Did you see my transform?' },
-    { id: 3, name: 'Tyler Wilson', avatar: null, lastMessage: 'Cool project!' },
+  // Combined list of all connections (followers and following)
+  const allConnections = [
+    { id: 1, name: 'Alex Johnson', avatar: null, lastMessage: 'Hey, how are you?', type: 'follower' },
+    { id: 2, name: 'Maria Garcia', avatar: null, lastMessage: 'Did you see my transform?', type: 'follower' },
+    { id: 3, name: 'Tyler Wilson', avatar: null, lastMessage: 'Cool project!', type: 'follower' },
+    { id: 4, name: 'Emma Thompson', avatar: null, lastMessage: 'Thanks for the follow!', type: 'following' },
+    { id: 5, name: 'Carlos Rodriguez', avatar: null, lastMessage: 'Let me know what you think', type: 'following' },
   ];
 
-  const following = [
-    { id: 4, name: 'Emma Thompson', avatar: null, lastMessage: 'Thanks for the follow!' },
-    { id: 5, name: 'Carlos Rodriguez', avatar: null, lastMessage: 'Let me know what you think' },
-  ];
-
-  const filteredFollowers = followers.filter(user => 
-    user.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-  
-  const filteredFollowing = following.filter(user => 
+  const filteredConnections = allConnections.filter(user => 
     user.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
@@ -114,77 +106,46 @@ const Message = () => {
           </div>
         </motion.div>
         
-        {/* User lists with tabs */}
+        {/* Combined user list */}
         <motion.div
           className="max-w-md mx-auto"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5, duration: 0.5 }}
         >
-          <Tabs defaultValue="following" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 mb-4">
-              <TabsTrigger value="following">Following</TabsTrigger>
-              <TabsTrigger value="followers">Followers</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="following" className="space-y-2">
-              {filteredFollowing.length > 0 ? (
-                filteredFollowing.map(user => (
-                  <motion.div 
-                    key={user.id}
-                    className="flex items-center gap-3 p-3 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow"
-                    whileHover={{ y: -2 }}
-                  >
-                    <Avatar className="h-12 w-12 border border-gray-100">
-                      <AvatarFallback className="bg-toon-blue/10">
-                        <UserRound className="h-6 w-6 text-toon-blue" />
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-grow">
+          <div className="space-y-2">
+            {filteredConnections.length > 0 ? (
+              filteredConnections.map(user => (
+                <motion.div 
+                  key={user.id}
+                  className="flex items-center gap-3 p-3 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow"
+                  whileHover={{ y: -2 }}
+                >
+                  <Avatar className="h-12 w-12 border border-gray-100">
+                    <AvatarFallback className="bg-toon-blue/10">
+                      <UserRound className="h-6 w-6 text-toon-blue" />
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-grow">
+                    <div className="flex items-center gap-2">
                       <p className="font-medium">{user.name}</p>
-                      <p className="text-sm text-gray-500 truncate">{user.lastMessage}</p>
+                      <span className="text-xs bg-gray-100 px-2 py-0.5 rounded-full text-gray-600">
+                        {user.type}
+                      </span>
                     </div>
-                    <Button size="icon" variant="ghost" className="text-toon-blue">
-                      <SendHorizontal className="h-5 w-5" />
-                    </Button>
-                  </motion.div>
-                ))
-              ) : (
-                <div className="text-center py-8">
-                  <p className="text-gray-500">No matching users found</p>
-                </div>
-              )}
-            </TabsContent>
-            
-            <TabsContent value="followers" className="space-y-2">
-              {filteredFollowers.length > 0 ? (
-                filteredFollowers.map(user => (
-                  <motion.div 
-                    key={user.id}
-                    className="flex items-center gap-3 p-3 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow"
-                    whileHover={{ y: -2 }}
-                  >
-                    <Avatar className="h-12 w-12 border border-gray-100">
-                      <AvatarFallback className="bg-toon-blue/10">
-                        <UserRound className="h-6 w-6 text-toon-blue" />
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-grow">
-                      <p className="font-medium">{user.name}</p>
-                      <p className="text-sm text-gray-500 truncate">{user.lastMessage}</p>
-                    </div>
-                    <Button size="icon" variant="ghost" className="text-toon-blue">
-                      <SendHorizontal className="h-5 w-5" />
-                    </Button>
-                  </motion.div>
-                ))
-              ) : (
-                <div className="text-center py-8">
-                  <p className="text-gray-500">No matching users found</p>
-                </div>
-              )}
-            </TabsContent>
-          </Tabs>
+                    <p className="text-sm text-gray-500 truncate">{user.lastMessage}</p>
+                  </div>
+                  <Button size="icon" variant="ghost" className="text-toon-blue">
+                    <SendHorizontal className="h-5 w-5" />
+                  </Button>
+                </motion.div>
+              ))
+            ) : (
+              <div className="text-center py-8">
+                <p className="text-gray-500">No matching users found</p>
+              </div>
+            )}
+          </div>
         </motion.div>
       </main>
       
