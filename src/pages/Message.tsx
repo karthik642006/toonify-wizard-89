@@ -8,9 +8,18 @@ import { MessageCircle, Search, UserRound, SendHorizontal } from 'lucide-react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 const Message = () => {
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedUser, setSelectedUser] = useState<null | {
+    id: number;
+    name: string;
+    avatar: null;
+    type: string;
+  }>(null);
+  const [messageInput, setMessageInput] = useState('');
+  const [chats, setChats] = useState<Record<number, Array<{ text: string; sent: boolean; timestamp: Date }>>>({});
   
   // Sample stories data - in a real app, this would come from an API
   const stories = [
@@ -33,6 +42,48 @@ const Message = () => {
   const filteredConnections = allConnections.filter(user => 
     user.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const openChat = (user: typeof selectedUser) => {
+    setSelectedUser(user);
+    // Initialize chat history if it doesn't exist
+    if (user && !chats[user.id]) {
+      setChats(prev => ({
+        ...prev,
+        [user.id]: []
+      }));
+    }
+  };
+
+  const sendMessage = () => {
+    if (!messageInput.trim() || !selectedUser) return;
+    
+    const newMessage = {
+      text: messageInput,
+      sent: true,
+      timestamp: new Date()
+    };
+    
+    setChats(prev => ({
+      ...prev,
+      [selectedUser.id]: [...(prev[selectedUser.id] || []), newMessage]
+    }));
+    
+    setMessageInput('');
+    
+    // Simulate reply after 1 second (in a real app this would be from a server)
+    setTimeout(() => {
+      const replyMessage = {
+        text: `Thanks for your message: "${messageInput}"`,
+        sent: false,
+        timestamp: new Date()
+      };
+      
+      setChats(prev => ({
+        ...prev,
+        [selectedUser.id]: [...(prev[selectedUser.id] || []), replyMessage]
+      }));
+    }, 1000);
+  };
 
   return (
     <div className="min-h-screen">
@@ -118,8 +169,9 @@ const Message = () => {
               filteredConnections.map(user => (
                 <motion.div 
                   key={user.id}
-                  className="flex items-center gap-3 p-3 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow"
+                  className="flex items-center gap-3 p-3 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer"
                   whileHover={{ y: -2 }}
+                  onClick={() => openChat(user)}
                 >
                   <Avatar className="h-12 w-12 border border-gray-100">
                     <AvatarFallback className="bg-toon-blue/10">
@@ -136,7 +188,7 @@ const Message = () => {
                     <p className="text-sm text-gray-500 truncate">{user.lastMessage}</p>
                   </div>
                   <Button size="icon" variant="ghost" className="text-toon-blue">
-                    <SendHorizontal className="h-5 w-5" />
+                    <MessageCircle className="h-5 w-5" />
                   </Button>
                 </motion.div>
               ))
@@ -148,6 +200,65 @@ const Message = () => {
           </div>
         </motion.div>
       </main>
+      
+      {/* Chat Dialog */}
+      <Dialog open={!!selectedUser} onOpenChange={(open) => !open && setSelectedUser(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-3">
+              <Avatar className="h-10 w-10 border border-gray-100">
+                <AvatarFallback className="bg-toon-blue/10">
+                  <UserRound className="h-5 w-5 text-toon-blue" />
+                </AvatarFallback>
+              </Avatar>
+              <span>{selectedUser?.name}</span>
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="max-h-[60vh] overflow-y-auto flex flex-col gap-3 p-4">
+            {selectedUser && chats[selectedUser.id]?.length > 0 ? (
+              chats[selectedUser.id].map((message, index) => (
+                <div 
+                  key={index} 
+                  className={`flex ${message.sent ? 'justify-end' : 'justify-start'}`}
+                >
+                  <div 
+                    className={`max-w-[80%] rounded-lg p-3 ${
+                      message.sent 
+                        ? 'bg-toon-blue text-white' 
+                        : 'bg-gray-100 text-gray-800'
+                    }`}
+                  >
+                    <p>{message.text}</p>
+                    <p className={`text-xs mt-1 ${message.sent ? 'text-blue-100' : 'text-gray-500'}`}>
+                      {message.timestamp.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                    </p>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                <p>No messages yet</p>
+                <p className="text-sm">Send a message to start the conversation</p>
+              </div>
+            )}
+          </div>
+          
+          <div className="flex gap-2 mt-2">
+            <Input
+              placeholder="Type your message..."
+              value={messageInput}
+              onChange={(e) => setMessageInput(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
+              className="flex-grow"
+            />
+            <Button onClick={sendMessage}>
+              <SendHorizontal className="h-4 w-4 mr-2" />
+              Send
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
       
       <Footer />
       <BottomNavigation />
