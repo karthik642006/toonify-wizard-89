@@ -4,10 +4,11 @@ import { useState } from 'react';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import BottomNavigation from '../components/BottomNavigation';
-import { UserRound, Settings, Share, Pencil, Users } from 'lucide-react';
+import { UserRound, Settings, Share, Pencil, Users, X, Camera, Check } from 'lucide-react';
 import { toast } from 'sonner';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
 
@@ -16,6 +17,11 @@ type FollowType = 'followers' | 'following';
 const Profile = () => {
   const [showFollowDialog, setShowFollowDialog] = useState(false);
   const [followType, setFollowType] = useState<FollowType>('followers');
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [profileName, setProfileName] = useState('John Doe');
+  const [profileEmail, setProfileEmail] = useState('user@example.com');
+  const [editName, setEditName] = useState('');
+  const [editEmail, setEditEmail] = useState('');
   const navigate = useNavigate();
   
   const followers = [
@@ -40,7 +46,26 @@ const Profile = () => {
   };
 
   const handleEditProfile = () => {
-    toast.info('Edit profile functionality coming soon');
+    setEditName(profileName);
+    setEditEmail(profileEmail);
+    setShowEditDialog(true);
+  };
+
+  const handleSaveProfile = () => {
+    if (!editName.trim()) {
+      toast.error('Name cannot be empty');
+      return;
+    }
+
+    if (!editEmail.trim() || !/\S+@\S+\.\S+/.test(editEmail)) {
+      toast.error('Please enter a valid email address');
+      return;
+    }
+
+    setProfileName(editName);
+    setProfileEmail(editEmail);
+    setShowEditDialog(false);
+    toast.success('Profile updated successfully');
   };
 
   const handleOpenSettings = () => {
@@ -48,9 +73,8 @@ const Profile = () => {
   };
 
   const handleShareProfile = () => {
-    // Simulate sharing by showing a success toast
+    // Share profile by copying link to clipboard
     const profileUrl = window.location.href;
-    // In a real app, you might use the native share API or copy to clipboard
     navigator.clipboard.writeText(profileUrl)
       .then(() => toast.success('Profile link copied to clipboard!'))
       .catch(err => toast.error('Could not copy the profile link'));
@@ -105,8 +129,8 @@ const Profile = () => {
             </motion.button>
           </div>
           
-          <h1 className="text-2xl font-bold mb-1">John Doe</h1>
-          <p className="text-gray-500 mb-6">user@example.com</p>
+          <h1 className="text-2xl font-bold mb-1">{profileName}</h1>
+          <p className="text-gray-500 mb-6">{profileEmail}</p>
           
           <div className="flex justify-center w-full gap-12 mb-8">
             <motion.button
@@ -135,6 +159,7 @@ const Profile = () => {
         </motion.div>
       </main>
       
+      {/* Followers/Following Dialog */}
       <Dialog open={showFollowDialog} onOpenChange={setShowFollowDialog}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -161,6 +186,72 @@ const Profile = () => {
                 </Button>
               </div>
             ))}
+          </div>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Edit Profile Dialog */}
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center justify-between">
+              <span>Edit Profile</span>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={() => setShowEditDialog(false)}
+                className="h-8 w-8"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </DialogTitle>
+          </DialogHeader>
+          <div className="pt-4">
+            <div className="flex justify-center mb-6">
+              <div className="relative">
+                <div className="w-24 h-24 rounded-full bg-toon-blue/10 flex items-center justify-center">
+                  <UserRound className="w-12 h-12 text-toon-blue" />
+                </div>
+                <div className="absolute bottom-0 right-0 p-1 rounded-full bg-toon-blue text-white">
+                  <Camera className="w-4 h-4" />
+                </div>
+              </div>
+            </div>
+            
+            <div className="space-y-4">
+              <div>
+                <label htmlFor="profileName" className="block text-sm font-medium text-gray-700 mb-1">
+                  Name
+                </label>
+                <Input
+                  id="profileName"
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  placeholder="Your name"
+                />
+              </div>
+              
+              <div>
+                <label htmlFor="profileEmail" className="block text-sm font-medium text-gray-700 mb-1">
+                  Email
+                </label>
+                <Input
+                  id="profileEmail"
+                  type="email"
+                  value={editEmail}
+                  onChange={(e) => setEditEmail(e.target.value)}
+                  placeholder="your.email@example.com"
+                />
+              </div>
+              
+              <Button 
+                className="w-full bg-toon-blue hover:bg-toon-blue/90"
+                onClick={handleSaveProfile}
+              >
+                <Check className="mr-2 h-4 w-4" />
+                Save Changes
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
