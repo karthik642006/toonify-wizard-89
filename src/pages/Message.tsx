@@ -8,7 +8,7 @@ import { MessageCircle, Search, UserRound, SendHorizontal } from 'lucide-react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 const Message = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -213,6 +213,9 @@ const Message = () => {
               </Avatar>
               <span>{selectedUser?.name}</span>
             </DialogTitle>
+            <DialogDescription>
+              Send messages and start a conversation
+            </DialogDescription>
           </DialogHeader>
           
           <div className="max-h-[60vh] overflow-y-auto flex flex-col gap-3 p-4">
