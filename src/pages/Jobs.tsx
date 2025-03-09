@@ -47,22 +47,29 @@ const Jobs = () => {
         </motion.div>
         
         {/* Category Tabs */}
-        <div className="flex overflow-x-auto justify-center gap-2 md:gap-4 mb-8 pb-2">
+        <div className="flex overflow-x-auto justify-center gap-6 md:gap-8 mb-8 pb-2">
           {categories.map(category => (
             <motion.button
               key={category.id}
               className={cn(
-                "flex items-center gap-2 px-4 py-2 rounded-full whitespace-nowrap transition-colors",
+                "flex flex-col items-center gap-2 px-4 py-2 rounded-lg whitespace-nowrap transition-colors",
                 activeCategory === category.id 
-                  ? "bg-toon-blue text-white" 
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  ? "text-toon-blue" 
+                  : "text-gray-500 hover:text-gray-700"
               )}
               onClick={() => setActiveCategory(category.id as JobCategory)}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
-              <category.icon className="w-4 h-4" />
-              <span>{category.label}</span>
+              <div className={cn(
+                "p-3 rounded-full flex items-center justify-center",
+                activeCategory === category.id 
+                  ? "bg-toon-blue text-white" 
+                  : "bg-gray-100 text-gray-500"
+              )}>
+                <category.icon className="w-6 h-6" />
+              </div>
+              <span className="text-sm font-medium">{category.label}</span>
             </motion.button>
           ))}
         </div>

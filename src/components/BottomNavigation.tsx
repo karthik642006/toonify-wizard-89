@@ -1,6 +1,6 @@
 
 import { motion } from 'framer-motion';
-import { Home, Film, Upload, Briefcase, MessageCircle } from 'lucide-react';
+import { Home, Film, Upload, Briefcase, UserRound } from 'lucide-react';
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 
@@ -23,7 +23,7 @@ const BottomNavigation = () => {
     { icon: Film, label: 'Clips', href: '/clips' },
     { icon: Upload, label: 'Upload', href: '/upload' },
     { icon: Briefcase, label: 'Jobs', href: '/jobs' },
-    { icon: MessageCircle, label: 'Message', href: '/message' },
+    { icon: UserRound, label: 'Profile', href: '/profile' },
   ];
   
   return (
