@@ -1,4 +1,3 @@
-
 import { motion } from 'framer-motion';
 import { useState } from 'react';
 import Header from '../components/Header';
@@ -104,7 +103,6 @@ const Profile = () => {
   };
 
   const handleShareProfile = () => {
-    // Share profile by copying link to clipboard
     const profileUrl = window.location.href;
     navigator.clipboard.writeText(profileUrl)
       .then(() => toast.success('Profile link copied to clipboard!'))
@@ -116,7 +114,6 @@ const Profile = () => {
       <Header />
       
       <main className="container max-w-6xl pt-24 pb-24 px-6 mx-auto">
-        {/* Settings and Share buttons */}
         <div className="flex justify-between max-w-3xl mx-auto mb-4">
           <motion.button
             className="p-2 rounded-full bg-toon-blue/10 flex items-center justify-center"
@@ -146,7 +143,6 @@ const Profile = () => {
           transition={{ duration: 0.6 }}
         >
           <div className="relative flex items-center gap-4">
-            {/* Profile Picture */}
             <div 
               className="w-32 h-32 rounded-full bg-toon-blue/10 flex items-center justify-center overflow-hidden cursor-pointer" 
               onClick={handleEditProfilePicture}
@@ -162,7 +158,6 @@ const Profile = () => {
               )}
             </div>
             
-            {/* Edit profile button (moved to the right side) */}
             <motion.button
               className="p-3 rounded-full bg-toon-blue/10 flex items-center justify-center hover:bg-toon-blue/20 transition-colors"
               onClick={handleEditProfile}
@@ -188,11 +183,6 @@ const Profile = () => {
               <p className="text-sm text-gray-500">Following</p>
             </motion.button>
             
-            <div className="text-center">
-              <p className="text-2xl font-bold text-toon-blue">42</p>
-              <p className="text-sm text-gray-500">Transforms</p>
-            </div>
-            
             <motion.button
               className="flex flex-col items-center"
               onClick={handleShowFollowers}
@@ -205,7 +195,6 @@ const Profile = () => {
         </motion.div>
       </main>
       
-      {/* Followers/Following Dialog */}
       <Dialog open={showFollowDialog} onOpenChange={setShowFollowDialog}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -241,7 +230,6 @@ const Profile = () => {
         </DialogContent>
       </Dialog>
       
-      {/* Edit Profile Dialog */}
       <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -308,7 +296,6 @@ const Profile = () => {
         </DialogContent>
       </Dialog>
       
-      {/* Profile Picture Dialog */}
       <Dialog open={showProfilePictureDialog} onOpenChange={setShowProfilePictureDialog}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
