@@ -47,12 +47,12 @@ const Jobs = () => {
         </motion.div>
         
         {/* Category Tabs */}
-        <div className="flex overflow-x-auto justify-center gap-2 md:gap-4 mb-8 pb-2">
+        <div className="flex overflow-x-auto justify-center gap-2 md:gap-3 mb-8 pb-2">
           {categories.map(category => (
             <motion.button
               key={category.id}
               className={cn(
-                "flex items-center gap-2 px-4 py-2 rounded-full whitespace-nowrap transition-colors",
+                "flex flex-col items-center gap-1 px-3 py-2 rounded-lg whitespace-nowrap transition-colors",
                 activeCategory === category.id 
                   ? "bg-toon-blue text-white" 
                   : "bg-gray-100 text-gray-700 hover:bg-gray-200"
@@ -62,7 +62,7 @@ const Jobs = () => {
               whileTap={{ scale: 0.95 }}
             >
               <category.icon className="w-4 h-4" />
-              <span>{category.label}</span>
+              <span className="text-xs font-medium">{category.label}</span>
             </motion.button>
           ))}
         </div>
@@ -71,7 +71,7 @@ const Jobs = () => {
         <div className="flex flex-col items-center justify-center py-12">
           {activeCategory === 'jobs' && (
             <>
-              <Briefcase className="w-24 h-24 text-toon-blue/20 mb-6" />
+              <Briefcase className="w-16 h-16 text-toon-blue/20 mb-6" />
               <p className="text-xl text-gray-400">No active jobs</p>
               <p className="text-gray-400 mt-2">Your transformation jobs will appear here</p>
             </>
@@ -79,7 +79,7 @@ const Jobs = () => {
           
           {activeCategory === 'internships' && (
             <>
-              <GraduationCap className="w-24 h-24 text-toon-blue/20 mb-6" />
+              <GraduationCap className="w-16 h-16 text-toon-blue/20 mb-6" />
               <p className="text-xl text-gray-400">No internships found</p>
               <p className="text-gray-400 mt-2">Available internships will appear here</p>
             </>
@@ -87,7 +87,7 @@ const Jobs = () => {
           
           {activeCategory === 'courses' && (
             <>
-              <GraduationCap className="w-24 h-24 text-toon-blue/20 mb-6" />
+              <GraduationCap className="w-16 h-16 text-toon-blue/20 mb-6" />
               <p className="text-xl text-gray-400">No courses available</p>
               <p className="text-gray-400 mt-2">Recommended courses will appear here</p>
             </>
@@ -95,7 +95,7 @@ const Jobs = () => {
           
           {activeCategory === 'shop' && (
             <>
-              <ShoppingBag className="w-24 h-24 text-toon-blue/20 mb-6" />
+              <ShoppingBag className="w-16 h-16 text-toon-blue/20 mb-6" />
               <p className="text-xl text-gray-400">Shop is empty</p>
               <p className="text-gray-400 mt-2">Products will appear here soon</p>
             </>

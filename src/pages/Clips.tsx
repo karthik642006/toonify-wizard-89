@@ -4,10 +4,11 @@ import { motion } from 'framer-motion';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import BottomNavigation from '../components/BottomNavigation';
-import { Film, Heart, Share, MessageCircle, MoreVertical } from 'lucide-react';
+import { Film, Heart, Share, MessageCircle, MoreVertical, ArrowUp, ArrowDown, UserRound } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 
 // Sample clip data - in a real app, this would come from an API
 const mockClips = [
@@ -15,28 +16,34 @@ const mockClips = [
     id: '1',
     videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-girl-in-neon-sign-1232-large.mp4',
     username: 'creativecreator',
+    profileImage: 'https://i.pravatar.cc/150?img=32',
     description: 'Neon lights in the city #neon #cityvibes',
     likes: 1204,
     comments: 85,
-    isLiked: false
+    isLiked: false,
+    followers: 2345
   },
   {
     id: '2',
     videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-tree-with-yellow-flowers-1173-large.mp4',
     username: 'naturelover',
+    profileImage: 'https://i.pravatar.cc/150?img=12',
     description: 'Spring has finally arrived! #nature #spring',
     likes: 3421,
     comments: 129,
-    isLiked: false
+    isLiked: false,
+    followers: 5678
   },
   {
     id: '3',
     videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-waves-in-the-water-1164-large.mp4',
     username: 'oceanview',
+    profileImage: 'https://i.pravatar.cc/150?img=39',
     description: 'Peaceful waves on a sunny day #ocean #relax',
     likes: 5672,
     comments: 231,
-    isLiked: false
+    isLiked: false,
+    followers: 8932
   }
 ];
 
@@ -158,9 +165,20 @@ const Clips = () => {
                   }}
                 />
                 
-                {/* Clip Info */}
-                <div className="absolute bottom-16 left-4 right-16 text-white z-20">
-                  <h3 className="font-bold text-lg">@{clip.username}</h3>
+                {/* Creator Profile - Bottom Left */}
+                <div className="absolute left-4 bottom-24 flex items-center z-20">
+                  <Avatar className="h-12 w-12 border-2 border-white">
+                    <AvatarImage src={clip.profileImage} alt={clip.username} />
+                    <AvatarFallback>{clip.username.charAt(0).toUpperCase()}</AvatarFallback>
+                  </Avatar>
+                  <div className="ml-3 text-white">
+                    <h3 className="font-bold text-base">@{clip.username}</h3>
+                    <p className="text-xs opacity-90">{clip.followers.toLocaleString()} followers</p>
+                  </div>
+                </div>
+                
+                {/* Clip Description */}
+                <div className="absolute bottom-16 left-4 right-16 text-white z-20 mt-2">
                   <p className="text-sm opacity-90">{clip.description}</p>
                 </div>
                 
@@ -206,9 +224,20 @@ const Clips = () => {
                   </Button>
                 </div>
                 
-                {/* Swipe indicator */}
-                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-white/50 text-xs font-medium">
-                  Swipe up for next clip
+                {/* Swipe indicators */}
+                <div className="absolute right-4 top-1/2 transform -translate-y-1/2 flex flex-col gap-6 items-center text-white/70 z-20">
+                  {currentClipIndex > 0 && (
+                    <div className="flex flex-col items-center">
+                      <ArrowUp className="w-6 h-6 animate-bounce" />
+                      <span className="text-xs">Prev</span>
+                    </div>
+                  )}
+                  {currentClipIndex < clips.length - 1 && (
+                    <div className="flex flex-col items-center mt-4">
+                      <ArrowDown className="w-6 h-6 animate-bounce" />
+                      <span className="text-xs">Next</span>
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
