@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
 import ImageUploader from '../components/ImageUploader';
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 type FollowType = 'followers' | 'following';
 
@@ -22,8 +23,10 @@ const Profile = () => {
   const [showProfilePictureDialog, setShowProfilePictureDialog] = useState(false);
   const [profileName, setProfileName] = useState('John Doe');
   const [profileEmail, setProfileEmail] = useState('user@example.com');
+  const [profileBio, setProfileBio] = useState('UI/UX Designer | Developer | Content Creator');
   const [editName, setEditName] = useState('');
   const [editEmail, setEditEmail] = useState('');
+  const [editBio, setEditBio] = useState('');
   const [profilePicture, setProfilePicture] = useState<string | null>(null);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const navigate = useNavigate();
@@ -52,6 +55,7 @@ const Profile = () => {
   const handleEditProfile = () => {
     setEditName(profileName);
     setEditEmail(profileEmail);
+    setEditBio(profileBio);
     setShowEditDialog(true);
   };
 
@@ -72,6 +76,7 @@ const Profile = () => {
 
     setProfileName(editName);
     setProfileEmail(editEmail);
+    setProfileBio(editBio);
     setShowEditDialog(false);
     toast.success('Profile updated successfully');
   };
@@ -140,9 +145,10 @@ const Profile = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
         >
-          <div className="relative">
+          <div className="relative flex items-center gap-4">
+            {/* Profile Picture */}
             <div 
-              className="w-32 h-32 rounded-full bg-toon-blue/10 flex items-center justify-center mb-6 overflow-hidden" 
+              className="w-32 h-32 rounded-full bg-toon-blue/10 flex items-center justify-center overflow-hidden cursor-pointer" 
               onClick={handleEditProfilePicture}
             >
               {profilePicture ? (
@@ -156,20 +162,21 @@ const Profile = () => {
               )}
             </div>
             
-            {/* Edit profile picture button (top right) */}
+            {/* Edit profile button (moved to the right side) */}
             <motion.button
-              className="absolute top-0 right-0 p-2 rounded-full bg-white shadow-md hover:bg-gray-50 transition-colors"
-              onClick={handleEditProfilePicture}
+              className="p-3 rounded-full bg-toon-blue/10 flex items-center justify-center hover:bg-toon-blue/20 transition-colors"
+              onClick={handleEditProfile}
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.95 }}
-              aria-label="Edit profile picture"
+              aria-label="Edit profile"
             >
-              <Pencil className="w-4 h-4 text-toon-blue" />
+              <Pencil className="w-5 h-5 text-toon-blue" />
             </motion.button>
           </div>
           
-          <h1 className="text-2xl font-bold mb-1">{profileName}</h1>
-          <p className="text-gray-500 mb-6">{profileEmail}</p>
+          <h1 className="text-2xl font-bold mt-4 mb-1">{profileName}</h1>
+          <p className="text-gray-500 mb-2">{profileEmail}</p>
+          {profileBio && <p className="text-gray-700 text-center mb-6 max-w-md">{profileBio}</p>}
           
           <div className="flex justify-center w-full gap-12 mb-8">
             <motion.button
@@ -207,9 +214,15 @@ const Profile = () => {
           <div className="max-h-[60vh] overflow-y-auto">
             {(followType === 'followers' ? followers : following).map(user => (
               <div key={user.id} className="flex items-center gap-3 p-3 hover:bg-gray-50 rounded-lg">
-                <div className="w-10 h-10 rounded-full bg-toon-blue/10 flex items-center justify-center">
-                  <UserRound className="w-5 h-5 text-toon-blue" />
-                </div>
+                <Avatar className="h-10 w-10">
+                  {user.avatar ? (
+                    <AvatarImage src={user.avatar} alt={user.name} />
+                  ) : (
+                    <AvatarFallback className="bg-toon-blue/10">
+                      <UserRound className="w-5 h-5 text-toon-blue" />
+                    </AvatarFallback>
+                  )}
+                </Avatar>
                 <div className="flex-grow">
                   <p className="font-medium">{user.name}</p>
                 </div>
@@ -219,7 +232,6 @@ const Profile = () => {
                   className={cn(
                     followType === 'followers' ? "border-toon-blue text-toon-blue" : "bg-toon-blue text-white"
                   )}
-                  onClick={() => toast.info(followType === 'followers' ? 'Follow back' : 'Unfollow')}
                 >
                   {followType === 'followers' ? 'Follow' : 'Following'}
                 </Button>
@@ -269,6 +281,18 @@ const Profile = () => {
                   value={editEmail}
                   onChange={(e) => setEditEmail(e.target.value)}
                   placeholder="your.email@example.com"
+                />
+              </div>
+              
+              <div>
+                <label htmlFor="profileBio" className="block text-sm font-medium text-gray-700 mb-1">
+                  Bio
+                </label>
+                <Input
+                  id="profileBio"
+                  value={editBio}
+                  onChange={(e) => setEditBio(e.target.value)}
+                  placeholder="Tell us about yourself"
                 />
               </div>
               

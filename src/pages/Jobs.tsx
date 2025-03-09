@@ -3,16 +3,29 @@ import { motion } from 'framer-motion';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import BottomNavigation from '../components/BottomNavigation';
-import { Briefcase } from 'lucide-react';
+import { Briefcase, GraduationCap, ShoppingBag, Store } from 'lucide-react';
+import { useState } from 'react';
+import { cn } from '@/lib/utils';
+
+type JobCategory = 'internships' | 'jobs' | 'courses' | 'shop';
 
 const Jobs = () => {
+  const [activeCategory, setActiveCategory] = useState<JobCategory>('jobs');
+  
+  const categories = [
+    { id: 'internships', label: 'Internships', icon: GraduationCap },
+    { id: 'jobs', label: 'Jobs', icon: Briefcase },
+    { id: 'courses', label: 'Courses', icon: GraduationCap },
+    { id: 'shop', label: 'Shop', icon: Store },
+  ];
+
   return (
     <div className="min-h-screen">
       <Header />
       
       <main className="container max-w-6xl pt-24 pb-12 px-6 mx-auto">
         <motion.div 
-          className="text-center max-w-3xl mx-auto mb-12"
+          className="text-center max-w-3xl mx-auto mb-6"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
@@ -33,10 +46,60 @@ const Jobs = () => {
           </p>
         </motion.div>
         
+        {/* Category Tabs */}
+        <div className="flex overflow-x-auto justify-center gap-2 md:gap-4 mb-8 pb-2">
+          {categories.map(category => (
+            <motion.button
+              key={category.id}
+              className={cn(
+                "flex items-center gap-2 px-4 py-2 rounded-full whitespace-nowrap transition-colors",
+                activeCategory === category.id 
+                  ? "bg-toon-blue text-white" 
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+              )}
+              onClick={() => setActiveCategory(category.id as JobCategory)}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <category.icon className="w-4 h-4" />
+              <span>{category.label}</span>
+            </motion.button>
+          ))}
+        </div>
+        
+        {/* Content based on selected category */}
         <div className="flex flex-col items-center justify-center py-12">
-          <Briefcase className="w-24 h-24 text-toon-blue/20 mb-6" />
-          <p className="text-xl text-gray-400">No active jobs</p>
-          <p className="text-gray-400 mt-2">Your transformation jobs will appear here</p>
+          {activeCategory === 'jobs' && (
+            <>
+              <Briefcase className="w-24 h-24 text-toon-blue/20 mb-6" />
+              <p className="text-xl text-gray-400">No active jobs</p>
+              <p className="text-gray-400 mt-2">Your transformation jobs will appear here</p>
+            </>
+          )}
+          
+          {activeCategory === 'internships' && (
+            <>
+              <GraduationCap className="w-24 h-24 text-toon-blue/20 mb-6" />
+              <p className="text-xl text-gray-400">No internships found</p>
+              <p className="text-gray-400 mt-2">Available internships will appear here</p>
+            </>
+          )}
+          
+          {activeCategory === 'courses' && (
+            <>
+              <GraduationCap className="w-24 h-24 text-toon-blue/20 mb-6" />
+              <p className="text-xl text-gray-400">No courses available</p>
+              <p className="text-gray-400 mt-2">Recommended courses will appear here</p>
+            </>
+          )}
+          
+          {activeCategory === 'shop' && (
+            <>
+              <ShoppingBag className="w-24 h-24 text-toon-blue/20 mb-6" />
+              <p className="text-xl text-gray-400">Shop is empty</p>
+              <p className="text-gray-400 mt-2">Products will appear here soon</p>
+            </>
+          )}
         </div>
       </main>
       
