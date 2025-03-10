@@ -1,4 +1,5 @@
-import { useState } from 'react';
+
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
@@ -74,6 +75,11 @@ const Message = () => {
   const [activeTab, setActiveTab] = useState('chats');
   const [showStoryUploadDialog, setShowStoryUploadDialog] = useState(false);
   const [selectedImage, setSelectedImage] = useState<{ file: File; preview: string } | null>(null);
+  const [myStories, setMyStories] = useState<{id: string, image: string}[]>([]);
+  const [showMessageDialog, setShowMessageDialog] = useState(false);
+  const [selectedChat, setSelectedChat] = useState<typeof mockChats[0] | null>(null);
+  const [messageText, setMessageText] = useState('');
+  const [messages, setMessages] = useState<{text: string, sender: 'user' | 'other', timestamp: string}[]>([]);
 
   const handleStoryClick = (id: string) => {
     // If it's the user's own story, open upload dialog
@@ -85,7 +91,17 @@ const Message = () => {
   };
 
   const handleChatClick = (id: string) => {
-    toast.info(`Opening chat with ID: ${id}`);
+    const chat = mockChats.find(c => c.id === id);
+    if (chat) {
+      setSelectedChat(chat);
+      setShowMessageDialog(true);
+      // Initialize with some mock messages
+      setMessages([
+        {text: 'Hey there!', sender: 'other', timestamp: '10:30 AM'},
+        {text: 'How are you?', sender: 'user', timestamp: '10:31 AM'},
+        {text: 'I\'m doing great, thanks for asking!', sender: 'other', timestamp: '10:32 AM'}
+      ]);
+    }
   };
 
   const handleImageSelect = (file: File, preview: string) => {
@@ -98,12 +114,46 @@ const Message = () => {
 
   const handleUploadStory = () => {
     if (selectedImage) {
+      // Add the new story to myStories
+      const newStory = {
+        id: `my-story-${Date.now()}`,
+        image: selectedImage.preview
+      };
+      
+      setMyStories(prev => [newStory, ...prev]);
       toast.success('Story uploaded successfully!');
       setShowStoryUploadDialog(false);
       setSelectedImage(null);
     } else {
       toast.error('Please select an image');
     }
+  };
+
+  const handleSendMessage = () => {
+    if (!messageText.trim()) return;
+    
+    setMessages(prev => [
+      ...prev,
+      {
+        text: messageText,
+        sender: 'user',
+        timestamp: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
+      }
+    ]);
+    
+    setMessageText('');
+    
+    // Simulate reply after 1 second
+    setTimeout(() => {
+      setMessages(prev => [
+        ...prev,
+        {
+          text: 'Thanks for your message! I\'ll get back to you soon.',
+          sender: 'other',
+          timestamp: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
+        }
+      ]);
+    }, 1000);
   };
 
   return (
@@ -130,12 +180,16 @@ const Message = () => {
             {/* My Story (always first) */}
             <div className="flex flex-col items-center space-y-1">
               <button 
-                className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center relative"
+                className={`w-16 h-16 rounded-full ${myStories.length > 0 ? 'ring-2 ring-toon-blue' : 'bg-gray-100'} flex items-center justify-center relative`}
                 onClick={() => handleStoryClick('my-story')}
               >
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <User className="w-8 h-8 text-gray-400" />
-                </div>
+                {myStories.length > 0 ? (
+                  <img src={myStories[0].image} alt="My Story" className="w-full h-full object-cover rounded-full" />
+                ) : (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <User className="w-8 h-8 text-gray-400" />
+                  </div>
+                )}
                 <div className="absolute bottom-0 right-0 w-6 h-6 bg-toon-blue rounded-full flex items-center justify-center">
                   <Plus className="w-4 h-4 text-white" />
                 </div>
@@ -243,6 +297,70 @@ const Message = () => {
                 disabled={!selectedImage}
               >
                 Share to Story
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Message Dialog */}
+      <Dialog open={showMessageDialog} onOpenChange={setShowMessageDialog} >
+        <DialogContent className="sm:max-w-md max-h-[80vh]">
+          <div className="flex flex-col h-[60vh]">
+            {/* Chat header */}
+            <div className="flex items-center p-3 border-b">
+              <div className="relative">
+                <div className="w-10 h-10 rounded-full overflow-hidden">
+                  <img src={selectedChat?.image} alt={selectedChat?.name} className="w-full h-full object-cover" />
+                </div>
+                {selectedChat?.isOnline && (
+                  <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-white"></div>
+                )}
+              </div>
+              <div className="ml-3">
+                <h3 className="font-medium">{selectedChat?.name}</h3>
+                <p className="text-xs text-gray-500">{selectedChat?.isOnline ? 'Online' : 'Offline'}</p>
+              </div>
+            </div>
+            
+            {/* Messages area */}
+            <div className="flex-grow overflow-y-auto p-4 space-y-4">
+              {messages.map((message, index) => (
+                <div 
+                  key={index} 
+                  className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+                >
+                  <div 
+                    className={`max-w-[70%] p-3 rounded-lg ${
+                      message.sender === 'user' 
+                        ? 'bg-toon-blue text-white rounded-tr-none' 
+                        : 'bg-gray-100 text-gray-800 rounded-tl-none'
+                    }`}
+                  >
+                    <p>{message.text}</p>
+                    <p className={`text-xs ${message.sender === 'user' ? 'text-blue-100' : 'text-gray-500'} text-right mt-1`}>
+                      {message.timestamp}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            {/* Message input */}
+            <div className="border-t p-2 flex">
+              <input 
+                type="text" 
+                placeholder="Type a message..." 
+                className="flex-grow border rounded-full px-4 py-2 text-sm mr-2"
+                value={messageText}
+                onChange={(e) => setMessageText(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+              />
+              <Button 
+                className="rounded-full bg-toon-blue"
+                onClick={handleSendMessage}
+              >
+                Send
               </Button>
             </div>
           </div>

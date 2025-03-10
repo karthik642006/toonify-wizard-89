@@ -1,9 +1,16 @@
 
 import { createContext, useContext, useState, ReactNode } from 'react';
 
+interface User {
+  username: string;
+  name?: string;
+  email?: string;
+  profilePicture?: string;
+}
+
 interface AuthContextType {
   login: (username: string, password: string) => void;
-  user: any | null;
+  user: User | null;
 }
 
 const defaultContext: AuthContextType = {
@@ -20,11 +27,21 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
-  const [user, setUser] = useState<any | null>(null);
+  const [user, setUser] = useState<User | null>({
+    username: 'johndoe',
+    name: 'John Doe',
+    email: 'john@example.com',
+    profilePicture: 'https://i.pravatar.cc/300?img=11'
+  });
 
   const login = (username: string, password: string) => {
     // Mock login for now
-    setUser({ username });
+    setUser({ 
+      username,
+      name: username === 'johndoe' ? 'John Doe' : username,
+      email: `${username}@example.com`,
+      profilePicture: 'https://i.pravatar.cc/300?img=11'
+    });
   };
 
   return (

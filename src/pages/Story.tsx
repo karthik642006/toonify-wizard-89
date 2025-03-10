@@ -2,8 +2,10 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Heart, MessageSquare, X } from 'lucide-react';
+import { Heart, MessageCircle, X, Send } from 'lucide-react';
 import { toast } from 'sonner';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 
 // Mock stories data
 const mockStories = [
@@ -33,6 +35,8 @@ const Story = () => {
   const [currentStoryIndex, setCurrentStoryIndex] = useState(0);
   const [liked, setLiked] = useState(false);
   const [stories, setStories] = useState(mockStories);
+  const [showMessageDialog, setShowMessageDialog] = useState(false);
+  const [messageText, setMessageText] = useState('');
   
   // Find initial story index based on id
   useEffect(() => {
@@ -66,7 +70,15 @@ const Story = () => {
   };
 
   const handleMessage = () => {
-    toast.success('Message sent!');
+    setShowMessageDialog(true);
+  };
+
+  const handleSendDirectMessage = () => {
+    if (messageText.trim()) {
+      toast.success('Message sent!');
+      setMessageText('');
+      setShowMessageDialog(false);
+    }
   };
 
   const currentStory = stories[currentStoryIndex];
@@ -148,7 +160,7 @@ const Story = () => {
                 className="text-white p-2"
                 onClick={handleMessage}
               >
-                <MessageSquare />
+                <MessageCircle />
               </button>
             </div>
           </div>
@@ -156,14 +168,40 @@ const Story = () => {
 
         {/* Touch areas for navigation */}
         <button 
-          className="absolute left-0 top-0 h-full w-1/3"
+          className="absolute left-0 top-0 h-full w-1/3 z-20"
           onClick={handlePrevStory}
         />
         <button 
-          className="absolute right-0 top-0 h-full w-1/3"
+          className="absolute right-0 top-0 h-full w-1/3 z-20"
           onClick={handleNextStory}
         />
       </motion.div>
+
+      {/* Direct Message Dialog */}
+      <Dialog open={showMessageDialog} onOpenChange={setShowMessageDialog}>
+        <DialogContent className="sm:max-w-md">
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium">Send message to {currentStory?.username}</h3>
+            
+            <div className="flex gap-2">
+              <input 
+                type="text" 
+                value={messageText}
+                onChange={(e) => setMessageText(e.target.value)}
+                placeholder="Type your message..."
+                className="flex-1 border rounded-md px-3 py-2"
+              />
+              <Button 
+                className="bg-toon-blue hover:bg-toon-blue/90"
+                onClick={handleSendDirectMessage}
+              >
+                <Send className="w-4 h-4 mr-2" />
+                Send
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

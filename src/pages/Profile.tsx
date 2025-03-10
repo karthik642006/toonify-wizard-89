@@ -1,7 +1,7 @@
 
 import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import BottomNavigation from '../components/BottomNavigation';
@@ -137,12 +137,25 @@ const Profile = () => {
       setProfileBio(user.bio || '');
       setProfilePicture(user.profilePicture);
       
-      // Filter posts for this user
+      // Filter posts for this user from mockPosts
       const posts = mockPosts.filter(post => post.userId === user.username);
-      setUserPosts(posts);
+      
+      // Check for user-uploaded content in localStorage
+      try {
+        const userContent = JSON.parse(localStorage.getItem('userContent') || '[]');
+        const userSpecificContent = userContent.filter((item: Post) => 
+          item.userId === user.username || (!username && item.userId === 'johndoe')
+        );
+        
+        // Combine mock posts with user-uploaded content
+        setUserPosts([...userSpecificContent, ...posts]);
+      } catch (error) {
+        console.error('Error loading user content:', error);
+        setUserPosts(posts);
+      }
       
       // Determine if this is the logged-in user's profile
-      setIsOwnProfile(targetUsername === 'johndoe');
+      setIsOwnProfile(targetUsername === 'johndoe' || !username);
     }
   }, [username]);
 

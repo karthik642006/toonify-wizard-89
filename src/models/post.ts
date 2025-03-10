@@ -7,4 +7,6 @@ export interface Post {
   likes: number;
   comments: number;
   userId: string;
+  username?: string;
+  profileImage?: string;
 }

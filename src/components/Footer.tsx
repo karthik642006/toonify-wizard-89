@@ -1,5 +1,4 @@
 
-import { Heart, Github } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const Footer = () => {
@@ -16,9 +15,7 @@ const Footer = () => {
             className="flex items-center gap-1.5 text-sm text-gray-600"
             whileHover={{ scale: 1.05 }}
           >
-            <span>Made with</span>
-            <Heart className="w-4 h-4 text-toon-pink fill-toon-pink" />
-            <span>by Lovable AI</span>
+            {/* Removed "Made with love by Lovable AI" text */}
           </motion.div>
         </div>
       </div>

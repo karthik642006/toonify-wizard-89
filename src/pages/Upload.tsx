@@ -10,11 +10,16 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from 'sonner';
 import { FileImage, Video, Film } from 'lucide-react';
+import { v4 as uuidv4 } from 'uuid';
+import { useAuth } from '../context/AuthContext';
+import { Post } from '../models/post';
 
 const Upload = () => {
   const [selectedImage, setSelectedImage] = useState<{ file: File; preview: string } | null>(null);
   const [selectedTab, setSelectedTab] = useState("post");
+  const [caption, setCaption] = useState('');
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const handleImageSelect = (file: File, preview: string) => {
     setSelectedImage({ file, preview });
@@ -26,8 +31,31 @@ const Upload = () => {
   };
 
   const handleUpload = () => {
-    toast.success(`${selectedTab} uploaded`);
-    navigate('/');
+    if (!selectedImage) {
+      toast.error('Please select an image first');
+      return;
+    }
+
+    // Create a new post/video/clip object
+    const newContent: Post = {
+      id: uuidv4(),
+      imageUrl: selectedImage.preview,
+      type: selectedTab as 'post' | 'video' | 'clip',
+      createdAt: new Date().toISOString(),
+      likes: 0,
+      comments: 0,
+      userId: user?.username || 'johndoe',
+      username: user?.username || 'John Doe',
+      profileImage: 'https://i.pravatar.cc/150?img=11'
+    };
+
+    // In a real app, you would save this to a database
+    // For now, we'll just add it to localStorage
+    const existingContent = JSON.parse(localStorage.getItem('userContent') || '[]');
+    localStorage.setItem('userContent', JSON.stringify([newContent, ...existingContent]));
+
+    toast.success(`${selectedTab} uploaded successfully!`);
+    navigate('/profile');
   };
 
   return (
@@ -35,22 +63,6 @@ const Upload = () => {
       <Header />
       
       <main className="container max-w-6xl pt-24 pb-12 px-6 mx-auto">
-        <motion.div 
-          className="text-center max-w-3xl mx-auto mb-8"
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-        >
-          <motion.div
-            className="inline-block px-3 py-1 mb-4 rounded-full bg-toon-blue/10 text-toon-blue text-xs font-medium"
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.3, duration: 0.4 }}
-          >
-            Upload
-          </motion.div>
-        </motion.div>
-        
         <div className="max-w-3xl mx-auto">
           <Tabs defaultValue="post" value={selectedTab} onValueChange={setSelectedTab} className="mb-8">
             <TabsList className="grid grid-cols-3 w-full max-w-md mx-auto">
@@ -79,31 +91,45 @@ const Upload = () => {
             <TabsContent value="clip" className="mt-6">
               <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center">
                 <Film className="w-16 h-16 mx-auto text-gray-400 mb-4" />
-                <Button>Select Video</Button>
+                <Button onClick={() => handleImageSelect(new File([], 'clip.mp4'), 'https://i.pravatar.cc/300?img=7')}>Select Video</Button>
               </div>
             </TabsContent>
             
             <TabsContent value="video" className="mt-6">
               <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center">
                 <Video className="w-16 h-16 mx-auto text-gray-400 mb-4" />
-                <Button>Select Video</Button>
+                <Button onClick={() => handleImageSelect(new File([], 'video.mp4'), 'https://i.pravatar.cc/300?img=5')}>Select Video</Button>
               </div>
             </TabsContent>
           </Tabs>
           
-          {((selectedTab === "post" && selectedImage) || selectedTab !== "post") && (
+          {selectedImage && (
             <motion.div
-              className="flex justify-center mt-8"
+              className="space-y-4"
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.4 }}
+              transition={{ duration: 0.5 }}
             >
-              <Button
-                className="px-6 py-3 bg-toon-blue text-white rounded-lg font-medium hover:bg-toon-blue/90 transition-colors"
-                onClick={handleUpload}
+              <textarea
+                placeholder="Write a caption..."
+                className="w-full p-3 border rounded-lg resize-none h-24"
+                value={caption}
+                onChange={(e) => setCaption(e.target.value)}
+              />
+              
+              <motion.div
+                className="flex justify-center"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.2 }}
               >
-                Upload
-              </Button>
+                <Button
+                  className="px-6 py-3 bg-toon-blue text-white rounded-lg font-medium hover:bg-toon-blue/90 transition-colors"
+                  onClick={handleUpload}
+                >
+                  Upload
+                </Button>
+              </motion.div>
             </motion.div>
           )}
         </div>

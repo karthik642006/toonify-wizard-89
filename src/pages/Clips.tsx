@@ -51,6 +51,7 @@ const Clips = () => {
   const [currentClipIndex, setCurrentClipIndex] = useState(0);
   const [isCommentOpen, setIsCommentOpen] = useState(false);
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  const [moreOptionsOpen, setMoreOptionsOpen] = useState(false);
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -142,12 +143,10 @@ const Clips = () => {
 
   // More options functionality
   const handleMoreOptions = () => {
-    toast({
-      title: "More options",
-    });
+    setMoreOptionsOpen(true);
   };
 
-  // Navigate to uploader's profile, not user's own profile
+  // Navigate to uploader's profile
   const handleProfileClick = (username: string, event: React.MouseEvent) => {
     event.stopPropagation();
     navigate(`/profile/${username}`);
@@ -191,28 +190,27 @@ const Clips = () => {
                 />
                 
                 {/* Creator Profile - Bottom Left */}
-                <div className="absolute left-4 bottom-24 flex items-center z-20">
+                <div className="absolute left-4 bottom-24 flex flex-col z-20">
                   <Avatar 
-                    className="h-12 w-12 border-2 border-white cursor-pointer"
+                    className="h-12 w-12 border-2 border-white cursor-pointer mb-2"
                     onClick={(e) => handleProfileClick(clip.username, e)}
                   >
                     <AvatarImage src={clip.profileImage} alt={clip.username} />
                     <AvatarFallback>{clip.username.charAt(0).toUpperCase()}</AvatarFallback>
                   </Avatar>
-                  <div className="ml-3">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className={`py-0 px-3 h-7 text-xs rounded-full ${
-                        clip.isFollowing 
-                          ? 'bg-white/10 text-white border-white/20' 
-                          : 'bg-white text-black border-none'
-                      }`}
-                      onClick={(e) => handleFollow(clip.id, e)}
-                    >
-                      {clip.isFollowing ? 'Following' : 'Follow'}
-                    </Button>
-                  </div>
+                  <span className="text-white text-sm font-medium mb-2">{clip.username}</span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className={`py-0 px-3 h-7 text-xs rounded-full ${
+                      clip.isFollowing 
+                        ? 'bg-white/10 text-white border-white/20' 
+                        : 'bg-white text-black border-none'
+                    }`}
+                    onClick={(e) => handleFollow(clip.id, e)}
+                  >
+                    {clip.isFollowing ? 'Following' : 'Follow'}
+                  </Button>
                 </div>
                 
                 {/* Action Buttons (Right Side) */}
@@ -314,6 +312,31 @@ const Clips = () => {
                 </div>
                 <span className="text-xs">{platform}</span>
               </div>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* More Options Dialog */}
+      <Dialog open={moreOptionsOpen} onOpenChange={setMoreOptionsOpen}>
+        <DialogContent className="max-w-xs">
+          <div className="flex flex-col gap-2">
+            {['Report', 'Not Interested', 'Save', 'Remix', 'Cancel'].map((option) => (
+              <Button 
+                key={option} 
+                variant={option === 'Cancel' ? 'outline' : 'ghost'}
+                className="justify-start"
+                onClick={() => {
+                  if (option !== 'Cancel') {
+                    toast({
+                      title: `${option} action selected`,
+                    });
+                  }
+                  setMoreOptionsOpen(false);
+                }}
+              >
+                {option}
+              </Button>
             ))}
           </div>
         </DialogContent>

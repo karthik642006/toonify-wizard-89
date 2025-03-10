@@ -1,255 +1,226 @@
+
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
 
 import Header from '../components/Header';
-import ImageUploader from '../components/ImageUploader';
-import StyleSelector, { ToonStyle } from '../components/StyleSelector';
-import TransformPreview from '../components/TransformPreview';
-import Gallery, { GalleryItem } from '../components/Gallery';
 import Footer from '../components/Footer';
 import BottomNavigation from '../components/BottomNavigation';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Play, Heart, MessageCircle, Share } from 'lucide-react';
+import { Post } from '../models/post';
 
-import { 
-  toonStyles, 
-  transformImage, 
-  saveTransformedImage, 
-  getGalleryItems, 
-  downloadImage, 
-  deleteGalleryItem 
-} from '../utils/imageTransform';
+// Mock posts data from all users
+const mockPosts: Post[] = [
+  { 
+    id: '1', 
+    imageUrl: 'https://i.pravatar.cc/300?img=1', 
+    type: 'post', 
+    createdAt: '2023-05-01', 
+    likes: 120, 
+    comments: 14, 
+    userId: 'johndoe',
+    username: 'John Doe',
+    profileImage: 'https://i.pravatar.cc/150?img=11'
+  },
+  { 
+    id: '9', 
+    imageUrl: 'https://i.pravatar.cc/300?img=10', 
+    type: 'post', 
+    createdAt: '2023-05-01', 
+    likes: 320, 
+    comments: 28, 
+    userId: 'creativecreator',
+    username: 'Creative Creator',
+    profileImage: 'https://i.pravatar.cc/150?img=32'
+  },
+  { 
+    id: '12', 
+    imageUrl: 'https://i.pravatar.cc/300?img=20', 
+    type: 'post', 
+    createdAt: '2023-05-01', 
+    likes: 220, 
+    comments: 18, 
+    userId: 'naturelover',
+    username: 'Nature Lover',
+    profileImage: 'https://i.pravatar.cc/150?img=12'
+  },
+  { 
+    id: '5', 
+    imageUrl: 'https://i.pravatar.cc/300?img=5', 
+    type: 'video', 
+    createdAt: '2023-05-05', 
+    likes: 154, 
+    comments: 19, 
+    userId: 'johndoe',
+    username: 'John Doe',
+    profileImage: 'https://i.pravatar.cc/150?img=11'
+  },
+  { 
+    id: '10', 
+    imageUrl: 'https://i.pravatar.cc/300?img=12', 
+    type: 'video', 
+    createdAt: '2023-05-02', 
+    likes: 520, 
+    comments: 42, 
+    userId: 'creativecreator',
+    username: 'Creative Creator',
+    profileImage: 'https://i.pravatar.cc/150?img=32'
+  },
+  { 
+    id: '7', 
+    imageUrl: 'https://i.pravatar.cc/300?img=7', 
+    type: 'clip', 
+    createdAt: '2023-05-07', 
+    likes: 231, 
+    comments: 27, 
+    userId: 'johndoe',
+    username: 'John Doe',
+    profileImage: 'https://i.pravatar.cc/150?img=11'
+  },
+  { 
+    id: '11', 
+    imageUrl: 'https://i.pravatar.cc/300?img=14', 
+    type: 'clip', 
+    createdAt: '2023-05-03', 
+    likes: 720, 
+    comments: 58, 
+    userId: 'creativecreator',
+    username: 'Creative Creator',
+    profileImage: 'https://i.pravatar.cc/150?img=32'
+  },
+];
 
 const Index = () => {
-  const [selectedImage, setSelectedImage] = useState<{ file: File; preview: string } | null>(null);
-  const [selectedStyle, setSelectedStyle] = useState<string>(toonStyles[0].id);
-  const [transformedImage, setTransformedImage] = useState<string | null>(null);
-  const [isTransforming, setIsTransforming] = useState<boolean>(false);
-  const [galleryItems, setGalleryItems] = useState<GalleryItem[]>([]);
-  const [activeView, setActiveView] = useState<'upload' | 'preview'>('upload');
-  const [transformation, setTransformation] = useState<{ styleName: string; timestamp: string }>({
-    styleName: '',
-    timestamp: ''
-  });
+  const [activeTab, setActiveTab] = useState<string>('all');
+  const [posts, setPosts] = useState<Post[]>(mockPosts);
+  const [likedPosts, setLikedPosts] = useState<string[]>([]);
+  const navigate = useNavigate();
 
-  useEffect(() => {
-    setGalleryItems(getGalleryItems());
-  }, []);
-
-  const handleImageSelect = (file: File, preview: string) => {
-    setSelectedImage({ file, preview });
-    setTransformedImage(null);
-    setActiveView('upload');
-  };
-
-  const handleClearImage = () => {
-    setSelectedImage(null);
-    setTransformedImage(null);
-    setActiveView('upload');
-  };
-
-  const handleStyleSelect = (styleId: string) => {
-    setSelectedStyle(styleId);
-  };
-
-  const handleTransform = async () => {
-    if (!selectedImage) {
-      toast.error('Please select an image first');
-      return;
-    }
-
-    try {
-      setIsTransforming(true);
-      
-      const result = await transformImage(selectedImage.preview, selectedStyle);
-      
-      setTransformedImage(result);
-      
-      const style = toonStyles.find(s => s.id === selectedStyle);
-      
-      setTransformation({
-        styleName: style?.name || 'Custom',
-        timestamp: new Date().toISOString()
-      });
-      
-      const galleryItem = saveTransformedImage(selectedImage.preview, result, selectedStyle);
-      setGalleryItems(prevItems => [galleryItem, ...prevItems]);
-      
-      setActiveView('preview');
-      
-      toast.success('Transformation complete!');
-    } catch (error) {
-      console.error('Transformation error:', error);
-      toast.error('Failed to transform image');
-    } finally {
-      setIsTransforming(false);
+  const handleLike = (postId: string) => {
+    if (likedPosts.includes(postId)) {
+      // Unlike
+      setLikedPosts(prev => prev.filter(id => id !== postId));
+      setPosts(prev => prev.map(post => 
+        post.id === postId ? {...post, likes: post.likes - 1} : post
+      ));
+    } else {
+      // Like
+      setLikedPosts(prev => [...prev, postId]);
+      setPosts(prev => prev.map(post => 
+        post.id === postId ? {...post, likes: post.likes + 1} : post
+      ));
     }
   };
 
-  const handleDownload = () => {
-    if (!transformedImage) return;
-    
-    const style = toonStyles.find(s => s.id === selectedStyle);
-    const filename = `toonify-${style?.name.toLowerCase() || 'custom'}-${Date.now()}.jpg`;
-    
-    downloadImage(transformedImage, filename);
-    toast.success('Image downloaded');
+  const handleComment = (postId: string) => {
+    toast.info('Comments coming soon');
   };
 
-  const handleGalleryItemDownload = (item: GalleryItem) => {
-    const filename = `toonify-${item.styleName.toLowerCase()}-${Date.now()}.jpg`;
-    downloadImage(item.transformed, filename);
-    toast.success('Image downloaded');
+  const handleShare = (postId: string) => {
+    toast.success('Post shared');
   };
 
-  const handleGalleryItemDelete = (itemId: string) => {
-    deleteGalleryItem(itemId);
-    setGalleryItems(prevItems => prevItems.filter(item => item.id !== itemId));
-    toast.success('Deleted from gallery');
+  const handleProfileClick = (userId: string) => {
+    navigate(`/profile/${userId}`);
   };
+
+  const filteredPosts = activeTab === 'all' 
+    ? posts 
+    : posts.filter(post => post.type === activeTab.slice(0, -1)); // Convert 'posts' to 'post', 'videos' to 'video', etc.
 
   return (
     <div className="min-h-screen">
       <Header />
       
       <main className="container max-w-6xl pt-24 pb-12 px-6 mx-auto">
-        <section id="upload" className="mb-20">
-          <motion.div 
-            className="text-center max-w-3xl mx-auto mb-12"
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-          >
-            <motion.div
-              className="inline-block px-3 py-1 mb-4 rounded-full bg-toon-blue/10 text-toon-blue text-xs font-medium"
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.3, duration: 0.4 }}
-            >
-              Transform your images with AI
-            </motion.div>
-            <h1 className="text-4xl sm:text-5xl font-bold mb-4 bg-gradient-to-r from-toon-blue to-toon-purple bg-clip-text text-transparent">
-              Turn Photos into Stylized Art
-            </h1>
-            <p className="text-lg text-gray-600">
-              Transform your ordinary photos into stunning cartoon styles with just a few clicks. 
-              Choose from multiple art styles and create unique stylized versions.
-            </p>
-          </motion.div>
-          
-          <div className="max-w-4xl mx-auto">
-            <AnimatePresence mode="wait">
-              {activeView === 'upload' ? (
-                <motion.div
-                  key="upload-view"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.3 }}
-                  className="space-y-8"
-                >
-                  <ImageUploader 
-                    onImageSelect={handleImageSelect}
-                    selectedImage={selectedImage?.preview || null}
-                    onClearImage={handleClearImage}
+        {/* Content Tabs */}
+        <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab} className="mb-8">
+          <TabsList className="w-full max-w-md mx-auto grid grid-cols-4">
+            <TabsTrigger value="all">All</TabsTrigger>
+            <TabsTrigger value="posts">Posts</TabsTrigger>
+            <TabsTrigger value="videos">Videos</TabsTrigger>
+            <TabsTrigger value="clips">Clips</TabsTrigger>
+          </TabsList>
+        </Tabs>
+
+        {/* Feed Content */}
+        <div className="max-w-md mx-auto space-y-6">
+          {filteredPosts.length > 0 ? (
+            filteredPosts.map(post => (
+              <motion.div 
+                key={post.id}
+                className="bg-white rounded-lg shadow overflow-hidden"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                {/* Post Header */}
+                <div className="p-3 flex items-center">
+                  <Avatar 
+                    className="h-10 w-10 cursor-pointer"
+                    onClick={() => handleProfileClick(post.userId)}
+                  >
+                    <AvatarImage src={post.profileImage} alt={post.username} />
+                    <AvatarFallback>{post.username?.[0]}</AvatarFallback>
+                  </Avatar>
+                  <div className="ml-3">
+                    <p className="font-medium text-sm">{post.username}</p>
+                    <p className="text-xs text-gray-500">{post.createdAt}</p>
+                  </div>
+                </div>
+                
+                {/* Post Content */}
+                <div className="relative">
+                  <img 
+                    src={post.imageUrl} 
+                    alt="" 
+                    className="w-full aspect-square object-cover"
                   />
-                  
-                  {selectedImage && (
-                    <>
-                      <StyleSelector 
-                        styles={toonStyles}
-                        selectedStyle={selectedStyle}
-                        onSelectStyle={handleStyleSelect}
-                        disabled={isTransforming}
-                      />
-                      
-                      <motion.div
-                        className="flex justify-center mt-6"
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.5, delay: 0.4 }}
-                      >
-                        <button
-                          className="px-6 py-3 bg-toon-blue text-white rounded-lg font-medium hover:bg-toon-blue/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                          onClick={handleTransform}
-                          disabled={isTransforming || !selectedImage}
-                        >
-                          {isTransforming ? 'Transforming...' : 'Transform Image'}
-                        </button>
-                      </motion.div>
-                    </>
+                  {post.type !== 'post' && (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="w-12 h-12 bg-black/30 rounded-full flex items-center justify-center">
+                        <Play className="w-6 h-6 text-white fill-white ml-1" />
+                      </div>
+                    </div>
                   )}
-                </motion.div>
-              ) : (
-                <motion.div
-                  key="preview-view"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <TransformPreview 
-                    originalImage={selectedImage?.preview || null}
-                    transformedImage={transformedImage}
-                    isLoading={isTransforming}
-                    transformation={transformation}
-                    onDownload={handleDownload}
-                    onBack={() => setActiveView('upload')}
-                  />
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-        </section>
-        
-        <section id="gallery" className="pt-12">
-          <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold mb-4">Your Gallery</h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">
-              All your transformed images are saved here. You can download or delete them anytime.
-            </p>
-          </div>
-          
-          <Gallery 
-            items={galleryItems}
-            onDownload={handleGalleryItemDownload}
-            onDelete={handleGalleryItemDelete}
-          />
-        </section>
-        
-        <section id="about" className="py-20">
-          <div className="max-w-3xl mx-auto text-center">
-            <motion.h2 
-              className="text-3xl font-bold mb-4"
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5 }}
-            >
-              About Toonify Wizard
-            </motion.h2>
-            <motion.p 
-              className="text-gray-600 mb-6"
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: 0.1 }}
-            >
-              Toonify Wizard is a powerful tool that leverages AI to transform your photos into 
-              stylized cartoon versions. Our app offers a variety of artistic styles to choose from, 
-              giving you endless creative possibilities.
-            </motion.p>
-            <motion.p 
-              className="text-gray-600"
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-            >
-              All transformations happen in your browser, ensuring your photos remain private and secure.
-              No data is sent to external servers or stored permanently outside your device.
-            </motion.p>
-          </div>
-        </section>
+                </div>
+                
+                {/* Post Actions */}
+                <div className="p-3 flex items-center gap-4">
+                  <button 
+                    className="flex items-center gap-1"
+                    onClick={() => handleLike(post.id)}
+                  >
+                    <Heart className={`w-6 h-6 ${likedPosts.includes(post.id) ? 'fill-red-500 text-red-500' : ''}`} />
+                    <span className="text-sm">{post.likes}</span>
+                  </button>
+                  
+                  <button 
+                    className="flex items-center gap-1"
+                    onClick={() => handleComment(post.id)}
+                  >
+                    <MessageCircle className="w-6 h-6" />
+                    <span className="text-sm">{post.comments}</span>
+                  </button>
+                  
+                  <button 
+                    className="flex items-center gap-1"
+                    onClick={() => handleShare(post.id)}
+                  >
+                    <Share className="w-6 h-6" />
+                  </button>
+                </div>
+              </motion.div>
+            ))
+          ) : (
+            <div className="text-center py-12">
+              <p className="text-gray-500">No content found</p>
+            </div>
+          )}
+        </div>
       </main>
       
       <Footer />
