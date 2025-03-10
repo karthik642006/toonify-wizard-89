@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import BottomNavigation from '../components/BottomNavigation';
-import { Briefcase, GraduationCap, ShoppingBag, Store } from 'lucide-react';
+import { Briefcase, BookOpen, ShoppingBag, Store } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 
@@ -13,7 +13,7 @@ const Jobs = () => {
   const [activeCategory, setActiveCategory] = useState<JobCategory>('jobs');
   
   const categories = [
-    { id: 'internships', label: 'Internships', icon: GraduationCap },
+    { id: 'internships', label: 'Internships', icon: BookOpen },
     { id: 'jobs', label: 'Jobs', icon: Briefcase },
     { id: 'courses', label: 'Courses', icon: ShoppingBag },
     { id: 'shop', label: 'Shop', icon: Store },
@@ -31,12 +31,11 @@ const Jobs = () => {
           transition={{ duration: 0.6 }}
         >
           <motion.div
-            className="inline-block px-3 py-1 mb-4 rounded-full bg-toon-blue/10 text-toon-blue text-xs font-medium"
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.3, duration: 0.4 }}
           >
-            Jobs
+            &nbsp;
           </motion.div>
         </motion.div>
         
@@ -71,7 +70,7 @@ const Jobs = () => {
           
           {activeCategory === 'internships' && (
             <>
-              <GraduationCap className="w-12 h-12 text-toon-blue/20 mb-4" />
+              <BookOpen className="w-12 h-12 text-toon-blue/20 mb-4" />
             </>
           )}
           

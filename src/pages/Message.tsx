@@ -1,171 +1,108 @@
-
+import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import BottomNavigation from '../components/BottomNavigation';
-import { MessageCircle, Search, UserRound, SendHorizontal, Plus, Heart, X, ChevronLeft, ChevronRight } from 'lucide-react';
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { useToast } from "@/hooks/use-toast";
+import { Plus, Camera, Search, User } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { toast } from 'sonner';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import ImageUploader from '../components/ImageUploader';
+
+// Mock stories data
+const mockStories = [
+  { id: '1', name: 'user1', image: 'https://i.pravatar.cc/150?img=1', hasStory: true, isViewed: false },
+  { id: '2', name: 'user2', image: 'https://i.pravatar.cc/150?img=2', hasStory: true, isViewed: true },
+  { id: '3', name: 'user3', image: 'https://i.pravatar.cc/150?img=3', hasStory: true, isViewed: false },
+  { id: '4', name: 'user4', image: 'https://i.pravatar.cc/150?img=4', hasStory: true, isViewed: false },
+  { id: '5', name: 'user5', image: 'https://i.pravatar.cc/150?img=5', hasStory: false, isViewed: false },
+];
+
+// Mock chat messages data
+const mockChats = [
+  { 
+    id: '1', 
+    name: 'Jane Smith', 
+    image: 'https://i.pravatar.cc/150?img=1', 
+    lastMessage: 'Hey, how are you doing?', 
+    time: '2m', 
+    unread: 3,
+    isOnline: true 
+  },
+  { 
+    id: '2', 
+    name: 'Alex Johnson', 
+    image: 'https://i.pravatar.cc/150?img=2', 
+    lastMessage: 'Check out my new post!', 
+    time: '15m', 
+    unread: 0,
+    isOnline: true 
+  },
+  { 
+    id: '3', 
+    name: 'Sam Williams', 
+    image: 'https://i.pravatar.cc/150?img=3', 
+    lastMessage: 'Let\'s catch up tomorrow?', 
+    time: '1h', 
+    unread: 1,
+    isOnline: false 
+  },
+  { 
+    id: '4', 
+    name: 'Taylor Rodriguez', 
+    image: 'https://i.pravatar.cc/150?img=4', 
+    lastMessage: 'Thanks for the help!', 
+    time: '3h', 
+    unread: 0,
+    isOnline: false 
+  },
+  { 
+    id: '5', 
+    name: 'Jordan Lee', 
+    image: 'https://i.pravatar.cc/150?img=5', 
+    lastMessage: 'Did you see the notification?', 
+    time: '1d', 
+    unread: 0,
+    isOnline: true 
+  },
+];
 
 const Message = () => {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedUser, setSelectedUser] = useState<null | {
-    id: number;
-    name: string;
-    avatar: null;
-    type: string;
-  }>(null);
-  const [messageInput, setMessageInput] = useState('');
-  const [chats, setChats] = useState<Record<number, Array<{ text: string; sent: boolean; timestamp: Date }>>>({});
-  const [showStory, setShowStory] = useState(false);
-  const [currentStoryIndex, setCurrentStoryIndex] = useState(0);
-  const [currentStoryUser, setCurrentStoryUser] = useState<{ id: number; name: string; hasStory: boolean; content?: string }>({ id: 0, name: '', hasStory: false });
-  const [showUploadStory, setShowUploadStory] = useState(false);
-  const [storyContent, setStoryContent] = useState('');
-  const [storyLiked, setStoryLiked] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const { toast } = useToast();
-  
-  // Sample stories data with My Story as first entry
-  const stories = [
-    { id: 0, name: 'My Story', hasStory: true, content: 'This is my story content!' },
-    { id: 1, name: 'Alex Johnson', hasStory: true, content: 'Alex posted a new photo!' },
-    { id: 2, name: 'Maria Garcia', hasStory: true, content: 'Check out my new transformation!' },
-    { id: 3, name: 'Tyler Wilson', hasStory: false },
-    { id: 4, name: 'Emma Thompson', hasStory: true, content: 'Having a great day!' },
-    { id: 5, name: 'Carlos Rodriguez', hasStory: true, content: 'New cartoon style available!' },
-  ];
+  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState('chats');
+  const [showStoryUploadDialog, setShowStoryUploadDialog] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<{ file: File; preview: string } | null>(null);
 
-  // Combined list of all connections (followers and following)
-  const allConnections = [
-    { id: 1, name: 'Alex Johnson', avatar: null, lastMessage: 'Hey, how are you?', type: 'follower' },
-    { id: 2, name: 'Maria Garcia', avatar: null, lastMessage: 'Did you see my transform?', type: 'follower' },
-    { id: 3, name: 'Tyler Wilson', avatar: null, lastMessage: 'Cool project!', type: 'follower' },
-    { id: 4, name: 'Emma Thompson', avatar: null, lastMessage: 'Thanks for the follow!', type: 'following' },
-    { id: 5, name: 'Carlos Rodriguez', avatar: null, lastMessage: 'Let me know what you think', type: 'following' },
-  ];
-
-  const filteredConnections = allConnections.filter(user => 
-    user.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  const openChat = (user: typeof selectedUser) => {
-    setSelectedUser(user);
-    // Initialize chat history if it doesn't exist
-    if (user && !chats[user.id]) {
-      setChats(prev => ({
-        ...prev,
-        [user.id]: []
-      }));
+  const handleStoryClick = (id: string) => {
+    // If it's the user's own story, open upload dialog
+    if (id === 'my-story') {
+      setShowStoryUploadDialog(true);
+    } else {
+      navigate(`/story/${id}`);
     }
   };
 
-  const sendMessage = () => {
-    if (!messageInput.trim() || !selectedUser) return;
-    
-    const newMessage = {
-      text: messageInput,
-      sent: true,
-      timestamp: new Date()
-    };
-    
-    setChats(prev => ({
-      ...prev,
-      [selectedUser.id]: [...(prev[selectedUser.id] || []), newMessage]
-    }));
-    
-    setMessageInput('');
-    
-    // Simulate reply after 1 second (in a real app this would be from a server)
-    setTimeout(() => {
-      const replyMessage = {
-        text: `Thanks for your message: "${messageInput}"`,
-        sent: false,
-        timestamp: new Date()
-      };
-      
-      setChats(prev => ({
-        ...prev,
-        [selectedUser.id]: [...(prev[selectedUser.id] || []), replyMessage]
-      }));
-    }, 1000);
+  const handleChatClick = (id: string) => {
+    toast.info(`Opening chat with ID: ${id}`);
   };
 
-  const handleStoryClick = (story: typeof stories[0], index: number) => {
-    if (index === 0) {
-      // My Story - open upload dialog if no story
-      setShowUploadStory(true);
-    } else if (story.hasStory) {
-      // View other user's story
-      setCurrentStoryUser(story);
-      setCurrentStoryIndex(index);
-      setShowStory(true);
-      setStoryLiked(false);
-    }
+  const handleImageSelect = (file: File, preview: string) => {
+    setSelectedImage({ file, preview });
+  };
+
+  const handleClearImage = () => {
+    setSelectedImage(null);
   };
 
   const handleUploadStory = () => {
-    if (fileInputRef.current) {
-      fileInputRef.current.click();
-    }
-  };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      // Simulate story upload
-      toast({
-        title: "Story uploaded",
-        description: "Your story has been uploaded successfully!",
-      });
-      setShowUploadStory(false);
-    }
-  };
-
-  const nextStory = () => {
-    if (currentStoryIndex < stories.length - 1) {
-      const nextIndex = currentStoryIndex + 1;
-      if (stories[nextIndex].hasStory) {
-        setCurrentStoryUser(stories[nextIndex]);
-        setCurrentStoryIndex(nextIndex);
-        setStoryLiked(false);
-      } else {
-        // Skip stories that don't have content
-        setCurrentStoryIndex(nextIndex);
-        nextStory();
-      }
+    if (selectedImage) {
+      toast.success('Story uploaded successfully!');
+      setShowStoryUploadDialog(false);
+      setSelectedImage(null);
     } else {
-      setShowStory(false); // Close when we reach the end
-    }
-  };
-
-  const prevStory = () => {
-    if (currentStoryIndex > 1) { // Don't go back to My Story
-      const prevIndex = currentStoryIndex - 1;
-      if (stories[prevIndex].hasStory) {
-        setCurrentStoryUser(stories[prevIndex]);
-        setCurrentStoryIndex(prevIndex);
-        setStoryLiked(false);
-      } else {
-        // Skip stories that don't have content
-        setCurrentStoryIndex(prevIndex);
-        prevStory();
-      }
-    }
-  };
-
-  const handleStoryMessage = () => {
-    if (currentStoryUser) {
-      // Find the corresponding user in connections
-      const user = allConnections.find(u => u.name === currentStoryUser.name);
-      if (user) {
-        setShowStory(false);
-        openChat(user);
-      }
+      toast.error('Please select an image');
     }
   };
 
@@ -173,307 +110,141 @@ const Message = () => {
     <div className="min-h-screen">
       <Header />
       
-      <main className="container max-w-6xl pt-24 pb-12 px-6 mx-auto">
-        <motion.div 
-          className="text-center max-w-3xl mx-auto mb-8"
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-        >
-          <motion.div
-            className="inline-block px-3 py-1 mb-4 rounded-full bg-toon-blue/10 text-toon-blue text-xs font-medium"
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.3, duration: 0.4 }}
-          >
-            Messages
-          </motion.div>
-          <h1 className="text-4xl sm:text-5xl font-bold mb-4 bg-gradient-to-r from-toon-blue to-toon-purple bg-clip-text text-transparent">
-            Your Conversations
-          </h1>
-        </motion.div>
+      <main className="container max-w-6xl pt-24 pb-24 px-6 mx-auto">
+        <div className="flex justify-between items-center max-w-2xl mx-auto mb-6">
+          <div className="flex-grow">
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Search..."
+                className="w-full px-4 py-2 pl-10 pr-4 text-sm bg-gray-100 border-none rounded-lg focus:outline-none focus:ring-2 focus:ring-toon-blue/50"
+              />
+              <Search className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
+            </div>
+          </div>
+        </div>
         
-        {/* Stories section */}
-        <motion.div 
-          className="mb-8"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.3, duration: 0.5 }}
-        >
-          <div className="overflow-x-auto pb-4">
-            <div className="flex space-x-4 px-2">
-              {stories.map((story, index) => (
-                <motion.div 
-                  key={story.id}
-                  className="flex flex-col items-center"
-                  whileHover={{ y: -2 }}
-                  onClick={() => handleStoryClick(story, index)}
+        {/* Stories */}
+        <div className="max-w-2xl mx-auto mb-6 overflow-x-auto">
+          <div className="flex space-x-4 pb-2 px-1">
+            {/* My Story (always first) */}
+            <div className="flex flex-col items-center space-y-1">
+              <button 
+                className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center relative"
+                onClick={() => handleStoryClick('my-story')}
+              >
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <User className="w-8 h-8 text-gray-400" />
+                </div>
+                <div className="absolute bottom-0 right-0 w-6 h-6 bg-toon-blue rounded-full flex items-center justify-center">
+                  <Plus className="w-4 h-4 text-white" />
+                </div>
+              </button>
+              <span className="text-xs">My Story</span>
+            </div>
+          
+            {/* Other Stories */}
+            {mockStories.map(story => (
+              <div key={story.id} className="flex flex-col items-center space-y-1">
+                <button 
+                  className={`w-16 h-16 rounded-full overflow-hidden ${
+                    story.hasStory && !story.isViewed 
+                      ? 'ring-2 ring-toon-blue' 
+                      : story.hasStory && story.isViewed 
+                        ? 'ring-2 ring-gray-300' 
+                        : ''
+                  }`}
+                  onClick={() => handleStoryClick(story.id)}
                 >
-                  <div className={`w-16 h-16 rounded-full flex items-center justify-center cursor-pointer mb-1 ${story.hasStory ? 'ring-2 ring-toon-blue p-0.5' : ''}`}>
-                    <div className="bg-toon-blue/10 rounded-full w-full h-full flex items-center justify-center relative">
-                      {index === 0 && (
-                        <Plus className="w-6 h-6 text-toon-blue absolute" />
+                  <img src={story.image} alt={story.name} className="w-full h-full object-cover" />
+                </button>
+                <span className="text-xs">{story.name}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+        
+        {/* Tabs for Chats/Requests */}
+        <div className="max-w-2xl mx-auto">
+          <Tabs defaultValue="chats" value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="w-full grid grid-cols-2 mb-6">
+              <TabsTrigger value="chats">Messages</TabsTrigger>
+              <TabsTrigger value="requests">Requests</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="chats" className="space-y-4">
+              {mockChats.map(chat => (
+                <motion.div 
+                  key={chat.id}
+                  className="flex items-center p-3 rounded-lg hover:bg-gray-50 cursor-pointer"
+                  onClick={() => handleChatClick(chat.id)}
+                  whileHover={{ scale: 1.01 }}
+                  whileTap={{ scale: 0.99 }}
+                >
+                  <div className="relative">
+                    <div className="w-12 h-12 rounded-full overflow-hidden">
+                      <img src={chat.image} alt={chat.name} className="w-full h-full object-cover" />
+                    </div>
+                    {chat.isOnline && (
+                      <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+                    )}
+                  </div>
+                  
+                  <div className="ml-3 flex-grow">
+                    <div className="flex justify-between items-center">
+                      <h3 className="font-medium">{chat.name}</h3>
+                      <span className="text-xs text-gray-500">{chat.time}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <p className="text-sm text-gray-600 truncate max-w-[180px]">{chat.lastMessage}</p>
+                      {chat.unread > 0 && (
+                        <div className="ml-2 bg-toon-blue text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                          {chat.unread}
+                        </div>
                       )}
-                      <UserRound className={`w-8 h-8 text-toon-blue ${index === 0 ? 'opacity-50' : ''}`} />
                     </div>
                   </div>
-                  <p className="text-xs text-center truncate w-20">{story.name}</p>
                 </motion.div>
               ))}
-            </div>
-          </div>
-        </motion.div>
-        
-        {/* Search component */}
-        <motion.div 
-          className="relative mb-6 max-w-md mx-auto"
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4, duration: 0.5 }}
-        >
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-            <Input
-              placeholder="Search messages..."
-              className="pl-9 bg-gray-50 border-gray-100"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-        </motion.div>
-        
-        {/* Combined user list */}
-        <motion.div
-          className="max-w-md mx-auto"
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5, duration: 0.5 }}
-        >
-          <div className="space-y-2">
-            {filteredConnections.length > 0 ? (
-              filteredConnections.map(user => (
-                <motion.div 
-                  key={user.id}
-                  className="flex items-center gap-3 p-3 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer"
-                  whileHover={{ y: -2 }}
-                  onClick={() => openChat(user)}
-                >
-                  <Avatar className="h-12 w-12 border border-gray-100">
-                    <AvatarFallback className="bg-toon-blue/10">
-                      <UserRound className="h-6 w-6 text-toon-blue" />
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-grow">
-                    <div className="flex items-center gap-2">
-                      <p className="font-medium">{user.name}</p>
-                      <span className="text-xs bg-gray-100 px-2 py-0.5 rounded-full text-gray-600">
-                        {user.type}
-                      </span>
-                    </div>
-                    <p className="text-sm text-gray-500 truncate">{user.lastMessage}</p>
-                  </div>
-                  <Button size="icon" variant="ghost" className="text-toon-blue">
-                    <MessageCircle className="h-5 w-5" />
-                  </Button>
-                </motion.div>
-              ))
-            ) : (
-              <div className="text-center py-8">
-                <p className="text-gray-500">No matching users found</p>
+            </TabsContent>
+            
+            <TabsContent value="requests" className="p-4 text-center">
+              <div className="py-6">
+                <Camera className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                <p className="text-gray-500">No message requests</p>
               </div>
-            )}
-          </div>
-        </motion.div>
+            </TabsContent>
+          </Tabs>
+        </div>
       </main>
       
-      {/* Chat Dialog */}
-      <Dialog open={!!selectedUser} onOpenChange={(open) => !open && setSelectedUser(null)}>
+      {/* Story Upload Dialog */}
+      <Dialog open={showStoryUploadDialog} onOpenChange={setShowStoryUploadDialog}>
         <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-3">
-              <Avatar className="h-10 w-10 border border-gray-100">
-                <AvatarFallback className="bg-toon-blue/10">
-                  <UserRound className="h-5 w-5 text-toon-blue" />
-                </AvatarFallback>
-              </Avatar>
-              <span>{selectedUser?.name}</span>
-            </DialogTitle>
-          </DialogHeader>
-          
-          <div className="max-h-[60vh] overflow-y-auto flex flex-col gap-3 p-4">
-            {selectedUser && chats[selectedUser.id]?.length > 0 ? (
-              chats[selectedUser.id].map((message, index) => (
-                <div 
-                  key={index} 
-                  className={`flex ${message.sent ? 'justify-end' : 'justify-start'}`}
-                >
-                  <div 
-                    className={`max-w-[80%] rounded-lg p-3 ${
-                      message.sent 
-                        ? 'bg-toon-blue text-white' 
-                        : 'bg-gray-100 text-gray-800'
-                    }`}
-                  >
-                    <p>{message.text}</p>
-                    <p className={`text-xs mt-1 ${message.sent ? 'text-blue-100' : 'text-gray-500'}`}>
-                      {message.timestamp.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-                    </p>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="text-center py-8 text-gray-500">
-                <p>No messages yet</p>
-                <p className="text-sm">Send a message to start the conversation</p>
-              </div>
-            )}
-          </div>
-          
-          <div className="flex gap-2 mt-2">
-            <Input
-              placeholder="Type your message..."
-              value={messageInput}
-              onChange={(e) => setMessageInput(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
-              className="flex-grow"
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium">Upload Story</h3>
+            
+            <ImageUploader 
+              onImageSelect={handleImageSelect}
+              selectedImage={selectedImage?.preview || null}
+              onClearImage={handleClearImage}
             />
-            <Button onClick={sendMessage}>
-              <SendHorizontal className="h-4 w-4 mr-2" />
-              Send
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-      
-      {/* Story View Dialog */}
-      <Dialog open={showStory} onOpenChange={setShowStory}>
-        <DialogContent className="sm:max-w-md max-h-[90vh] p-0 overflow-hidden bg-black text-white">
-          <div 
-            className="relative h-[70vh] flex items-center justify-center"
-            onTouchStart={(e) => {
-              const touchStartX = e.touches[0].clientX;
-              
-              const handleTouchEnd = (e: TouchEvent) => {
-                const touchEndX = e.changedTouches[0].clientX;
-                const diff = touchStartX - touchEndX;
-                
-                if (diff > 50) {
-                  nextStory(); // Swiped left
-                } else if (diff < -50) {
-                  prevStory(); // Swiped right
-                }
-                
-                document.removeEventListener('touchend', handleTouchEnd);
-              };
-              
-              document.addEventListener('touchend', handleTouchEnd);
-            }}
-          >
-            <div className="absolute top-4 right-4 z-10">
+            
+            <div className="flex justify-end gap-2 pt-4">
               <Button 
-                variant="ghost" 
-                size="icon" 
-                className="rounded-full bg-black/30 text-white hover:bg-black/50"
-                onClick={() => setShowStory(false)}
+                variant="outline" 
+                onClick={() => setShowStoryUploadDialog(false)}
               >
-                <X className="h-5 w-5" />
+                Cancel
+              </Button>
+              <Button 
+                className="bg-toon-blue hover:bg-toon-blue/90"
+                onClick={handleUploadStory}
+                disabled={!selectedImage}
+              >
+                Share to Story
               </Button>
             </div>
-            
-            {/* Story navigation */}
-            <div className="absolute top-1/2 left-4 transform -translate-y-1/2 z-10">
-              {currentStoryIndex > 1 && (
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className="rounded-full bg-black/30 text-white hover:bg-black/50"
-                  onClick={prevStory}
-                >
-                  <ChevronLeft className="h-6 w-6" />
-                </Button>
-              )}
-            </div>
-            
-            <div className="absolute top-1/2 right-4 transform -translate-y-1/2 z-10">
-              {currentStoryIndex < stories.length - 1 && (
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className="rounded-full bg-black/30 text-white hover:bg-black/50"
-                  onClick={nextStory}
-                >
-                  <ChevronRight className="h-6 w-6" />
-                </Button>
-              )}
-            </div>
-            
-            {/* Story content */}
-            <div className="flex flex-col items-center justify-center w-full h-full">
-              <div className="text-center py-6">
-                {currentStoryUser.content}
-              </div>
-            </div>
-            
-            {/* Story user info */}
-            <div className="absolute top-4 left-4 flex items-center gap-2">
-              <Avatar className="h-10 w-10 border border-white">
-                <AvatarFallback className="bg-blue-500/50">
-                  <UserRound className="h-5 w-5 text-white" />
-                </AvatarFallback>
-              </Avatar>
-              <span className="text-sm font-medium">{currentStoryUser.name}</span>
-            </div>
-            
-            {/* Story interactions */}
-            <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-4">
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="rounded-full bg-black/30 text-white hover:bg-black/50"
-                onClick={() => setStoryLiked(!storyLiked)}
-              >
-                <Heart className={`h-6 w-6 ${storyLiked ? 'fill-red-500 text-red-500' : ''}`} />
-              </Button>
-              
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="rounded-full bg-black/30 text-white hover:bg-black/50"
-                onClick={handleStoryMessage}
-              >
-                <MessageCircle className="h-6 w-6" />
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-      
-      {/* Upload Story Dialog */}
-      <Dialog open={showUploadStory} onOpenChange={setShowUploadStory}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Upload a Story</DialogTitle>
-          </DialogHeader>
-          
-          <div className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-gray-300 rounded-lg">
-            <input
-              type="file"
-              ref={fileInputRef}
-              className="hidden"
-              accept="image/*,video/*"
-              onChange={handleFileChange}
-            />
-            <Button 
-              variant="outline" 
-              onClick={handleUploadStory}
-              className="flex flex-col items-center gap-2 h-auto py-6"
-            >
-              <Plus className="h-8 w-8" />
-              <span>Upload photo or video</span>
-            </Button>
-            <p className="text-xs text-gray-500 mt-2">
-              Tap to select a photo or video from your gallery
-            </p>
           </div>
         </DialogContent>
       </Dialog>

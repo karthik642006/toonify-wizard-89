@@ -150,7 +150,7 @@ const Clips = () => {
   // Navigate to uploader's profile, not user's own profile
   const handleProfileClick = (username: string, event: React.MouseEvent) => {
     event.stopPropagation();
-    navigate(`/profile/${username}`); // Navigate to uploader's profile
+    navigate(`/profile/${username}`);
   };
 
   return (

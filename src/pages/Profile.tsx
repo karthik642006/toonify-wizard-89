@@ -1,10 +1,11 @@
 
 import { motion } from 'framer-motion';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import BottomNavigation from '../components/BottomNavigation';
-import { UserRound, Settings, Share, Pencil, X, Check } from 'lucide-react';
+import { UserRound, Settings, Share, Pencil, X, Check, Play } from 'lucide-react';
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from '@/components/ui/button';
@@ -14,48 +15,136 @@ import { useNavigate } from 'react-router-dom';
 import ImageUploader from '../components/ImageUploader';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Post } from '../models/post';
 
 type FollowType = 'followers' | 'following';
 
+// Mock user data
+const mockUsers = [
+  {
+    username: 'johndoe',
+    name: 'John Doe',
+    email: 'john@example.com',
+    bio: 'UI/UX Designer | Developer | Content Creator',
+    profilePicture: 'https://i.pravatar.cc/300?img=11',
+    followers: [
+      { id: 1, name: 'Alex Johnson', avatar: null },
+      { id: 2, name: 'Maria Garcia', avatar: null },
+      { id: 3, name: 'Tyler Wilson', avatar: null },
+    ],
+    following: [
+      { id: 4, name: 'Emma Thompson', avatar: null },
+      { id: 5, name: 'Carlos Rodriguez', avatar: null },
+    ],
+  },
+  {
+    username: 'creativecreator',
+    name: 'Creative Creator',
+    email: 'creator@example.com',
+    bio: 'Content creator & Visual artist',
+    profilePicture: 'https://i.pravatar.cc/150?img=32',
+    followers: [
+      { id: 1, name: 'Fan One', avatar: null },
+      { id: 2, name: 'Fan Two', avatar: null },
+    ],
+    following: [
+      { id: 4, name: 'Artist One', avatar: null },
+    ],
+  },
+  {
+    username: 'naturelover',
+    name: 'Nature Lover',
+    email: 'nature@example.com',
+    bio: 'Exploring nature & wildlife photography',
+    profilePicture: 'https://i.pravatar.cc/150?img=12',
+    followers: [
+      { id: 1, name: 'Earth Lover', avatar: null },
+      { id: 2, name: 'Planet Saver', avatar: null },
+    ],
+    following: [
+      { id: 4, name: 'Wild Explorer', avatar: null },
+    ],
+  },
+  {
+    username: 'oceanview',
+    name: 'Ocean View',
+    email: 'ocean@example.com',
+    bio: 'Ocean photographer & Marine life enthusiast',
+    profilePicture: 'https://i.pravatar.cc/150?img=39',
+    followers: [
+      { id: 1, name: 'Sea Lover', avatar: null },
+      { id: 2, name: 'Wave Rider', avatar: null },
+    ],
+    following: [
+      { id: 4, name: 'Marine Biologist', avatar: null },
+    ],
+  }
+];
+
+// Mock posts data
+const mockPosts: Post[] = [
+  { id: '1', imageUrl: 'https://i.pravatar.cc/300?img=1', type: 'post', createdAt: '2023-05-01', likes: 120, comments: 14, userId: 'johndoe' },
+  { id: '2', imageUrl: 'https://i.pravatar.cc/300?img=2', type: 'post', createdAt: '2023-05-02', likes: 85, comments: 7, userId: 'johndoe' },
+  { id: '3', imageUrl: 'https://i.pravatar.cc/300?img=3', type: 'post', createdAt: '2023-05-03', likes: 210, comments: 23, userId: 'johndoe' },
+  { id: '4', imageUrl: 'https://i.pravatar.cc/300?img=4', type: 'post', createdAt: '2023-05-04', likes: 97, comments: 9, userId: 'johndoe' },
+  { id: '5', imageUrl: 'https://i.pravatar.cc/300?img=5', type: 'video', createdAt: '2023-05-05', likes: 154, comments: 19, userId: 'johndoe' },
+  { id: '6', imageUrl: 'https://i.pravatar.cc/300?img=6', type: 'video', createdAt: '2023-05-06', likes: 176, comments: 21, userId: 'johndoe' },
+  { id: '7', imageUrl: 'https://i.pravatar.cc/300?img=7', type: 'clip', createdAt: '2023-05-07', likes: 231, comments: 27, userId: 'johndoe' },
+  { id: '8', imageUrl: 'https://i.pravatar.cc/300?img=8', type: 'clip', createdAt: '2023-05-08', likes: 189, comments: 16, userId: 'johndoe' },
+  // Posts for creativecreator
+  { id: '9', imageUrl: 'https://i.pravatar.cc/300?img=10', type: 'post', createdAt: '2023-05-01', likes: 320, comments: 28, userId: 'creativecreator' },
+  { id: '10', imageUrl: 'https://i.pravatar.cc/300?img=12', type: 'video', createdAt: '2023-05-02', likes: 520, comments: 42, userId: 'creativecreator' },
+  { id: '11', imageUrl: 'https://i.pravatar.cc/300?img=14', type: 'clip', createdAt: '2023-05-03', likes: 720, comments: 58, userId: 'creativecreator' },
+  // Posts for naturelover
+  { id: '12', imageUrl: 'https://i.pravatar.cc/300?img=20', type: 'post', createdAt: '2023-05-01', likes: 220, comments: 18, userId: 'naturelover' },
+  { id: '13', imageUrl: 'https://i.pravatar.cc/300?img=22', type: 'video', createdAt: '2023-05-02', likes: 420, comments: 32, userId: 'naturelover' },
+  // Posts for oceanview
+  { id: '14', imageUrl: 'https://i.pravatar.cc/300?img=30', type: 'post', createdAt: '2023-05-01', likes: 250, comments: 20, userId: 'oceanview' },
+  { id: '15', imageUrl: 'https://i.pravatar.cc/300?img=32', type: 'clip', createdAt: '2023-05-02', likes: 450, comments: 35, userId: 'oceanview' },
+];
+
 const Profile = () => {
+  const { username } = useParams();
+  const navigate = useNavigate();
+  
   const [showFollowDialog, setShowFollowDialog] = useState(false);
   const [followType, setFollowType] = useState<FollowType>('followers');
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showProfilePictureDialog, setShowProfilePictureDialog] = useState(false);
-  const [profileName, setProfileName] = useState('John Doe');
-  const [profileEmail, setProfileEmail] = useState('user@example.com');
-  const [profileBio, setProfileBio] = useState('UI/UX Designer | Developer | Content Creator');
+  const [profileName, setProfileName] = useState('');
+  const [profileEmail, setProfileEmail] = useState('');
+  const [profileBio, setProfileBio] = useState('');
   const [editName, setEditName] = useState('');
   const [editEmail, setEditEmail] = useState('');
   const [editBio, setEditBio] = useState('');
   const [profilePicture, setProfilePicture] = useState<string | null>(null);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('posts');
-  const navigate = useNavigate();
+  const [userProfile, setUserProfile] = useState<any>(null);
+  const [userPosts, setUserPosts] = useState<Post[]>([]);
+  const [isOwnProfile, setIsOwnProfile] = useState(true);
   
-  const followers = [
-    { id: 1, name: 'Alex Johnson', avatar: null },
-    { id: 2, name: 'Maria Garcia', avatar: null },
-    { id: 3, name: 'Tyler Wilson', avatar: null },
-  ];
-
-  const following = [
-    { id: 4, name: 'Emma Thompson', avatar: null },
-    { id: 5, name: 'Carlos Rodriguez', avatar: null },
-  ];
-
-  // Sample user content
-  const userPosts = [
-    { id: 1, imageUrl: 'https://i.pravatar.cc/300?img=1' },
-    { id: 2, imageUrl: 'https://i.pravatar.cc/300?img=2' },
-    { id: 3, imageUrl: 'https://i.pravatar.cc/300?img=3' },
-    { id: 4, imageUrl: 'https://i.pravatar.cc/300?img=4' },
-  ];
-  
-  const userVideos = [
-    { id: 1, thumbnailUrl: 'https://i.pravatar.cc/300?img=5' },
-    { id: 2, thumbnailUrl: 'https://i.pravatar.cc/300?img=6' },
-  ];
+  // Load user data based on username
+  useEffect(() => {
+    // Default to first user if no username specified
+    const targetUsername = username || 'johndoe';
+    const user = mockUsers.find(u => u.username === targetUsername);
+    
+    if (user) {
+      setUserProfile(user);
+      setProfileName(user.name);
+      setProfileEmail(user.email);
+      setProfileBio(user.bio || '');
+      setProfilePicture(user.profilePicture);
+      
+      // Filter posts for this user
+      const posts = mockPosts.filter(post => post.userId === user.username);
+      setUserPosts(posts);
+      
+      // Determine if this is the logged-in user's profile
+      setIsOwnProfile(targetUsername === 'johndoe');
+    }
+  }, [username]);
 
   const handleShowFollowers = () => {
     setFollowType('followers');
@@ -125,34 +214,39 @@ const Profile = () => {
       .then(() => toast.success('Profile link copied to clipboard!'))
       .catch(err => toast.error('Could not copy the profile link'));
   };
+  
+  const getFilteredContent = (type: string) => {
+    return userPosts.filter(post => post.type === type);
+  };
 
   return (
     <div className="min-h-screen">
       <Header />
       
       <main className="container max-w-6xl pt-24 pb-24 px-6 mx-auto">
-        {/* Settings and Share buttons */}
-        <div className="flex justify-between max-w-3xl mx-auto mb-4">
-          <motion.button
-            className="p-2 rounded-full bg-toon-blue/10 flex items-center justify-center"
-            onClick={handleOpenSettings}
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.95 }}
-            aria-label="Settings"
-          >
-            <Settings className="w-5 h-5 text-toon-blue" />
-          </motion.button>
-          
-          <motion.button
-            className="p-2 rounded-full bg-toon-blue/10 flex items-center justify-center"
-            onClick={handleShareProfile}
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.95 }}
-            aria-label="Share profile"
-          >
-            <Share className="w-5 h-5 text-toon-blue" />
-          </motion.button>
-        </div>
+        {isOwnProfile && (
+          <div className="flex justify-between max-w-3xl mx-auto mb-4">
+            <motion.button
+              className="p-2 rounded-full bg-toon-blue/10 flex items-center justify-center"
+              onClick={handleOpenSettings}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.95 }}
+              aria-label="Settings"
+            >
+              <Settings className="w-5 h-5 text-toon-blue" />
+            </motion.button>
+            
+            <motion.button
+              className="p-2 rounded-full bg-toon-blue/10 flex items-center justify-center"
+              onClick={handleShareProfile}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.95 }}
+              aria-label="Share profile"
+            >
+              <Share className="w-5 h-5 text-toon-blue" />
+            </motion.button>
+          </div>
+        )}
         
         <motion.div 
           className="flex flex-col items-center justify-center max-w-3xl mx-auto mb-8"
@@ -163,8 +257,8 @@ const Profile = () => {
           <div className="relative flex items-center gap-4">
             {/* Profile Picture */}
             <div 
-              className="w-32 h-32 rounded-full bg-toon-blue/10 flex items-center justify-center overflow-hidden cursor-pointer" 
-              onClick={handleEditProfilePicture}
+              className={`w-32 h-32 rounded-full bg-toon-blue/10 flex items-center justify-center overflow-hidden ${isOwnProfile ? 'cursor-pointer' : ''}`}
+              onClick={() => isOwnProfile && handleEditProfilePicture()}
             >
               {profilePicture ? (
                 <img 
@@ -177,16 +271,18 @@ const Profile = () => {
               )}
             </div>
             
-            {/* Edit profile button (moved to the right side) */}
-            <motion.button
-              className="p-3 rounded-full bg-toon-blue/10 flex items-center justify-center hover:bg-toon-blue/20 transition-colors"
-              onClick={handleEditProfile}
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.95 }}
-              aria-label="Edit profile"
-            >
-              <Pencil className="w-5 h-5 text-toon-blue" />
-            </motion.button>
+            {/* Edit profile button (only shown for own profile) */}
+            {isOwnProfile && (
+              <motion.button
+                className="p-3 rounded-full bg-toon-blue/10 flex items-center justify-center hover:bg-toon-blue/20 transition-colors"
+                onClick={handleEditProfile}
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.95 }}
+                aria-label="Edit profile"
+              >
+                <Pencil className="w-5 h-5 text-toon-blue" />
+              </motion.button>
+            )}
           </div>
           
           <h1 className="text-2xl font-bold mt-4 mb-1">{profileName}</h1>
@@ -199,7 +295,7 @@ const Profile = () => {
               onClick={handleShowFollowing}
               whileHover={{ y: -2 }}
             >
-              <p className="text-2xl font-bold text-toon-blue">{following.length}</p>
+              <p className="text-2xl font-bold text-toon-blue">{userProfile?.following?.length || 0}</p>
               <p className="text-sm text-gray-500">Following</p>
             </motion.button>
             
@@ -208,7 +304,7 @@ const Profile = () => {
               onClick={handleShowFollowers}
               whileHover={{ y: -2 }}
             >
-              <p className="text-2xl font-bold text-toon-blue">{followers.length}</p>
+              <p className="text-2xl font-bold text-toon-blue">{userProfile?.followers?.length || 0}</p>
               <p className="text-sm text-gray-500">Followers</p>
             </motion.button>
           </div>
@@ -217,14 +313,15 @@ const Profile = () => {
         {/* User Content Tabs */}
         <div className="max-w-3xl mx-auto">
           <Tabs defaultValue="posts" value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-2 mb-8">
+            <TabsList className="grid w-full grid-cols-3 mb-8">
               <TabsTrigger value="posts">Posts</TabsTrigger>
               <TabsTrigger value="videos">Videos</TabsTrigger>
+              <TabsTrigger value="clips">Clips</TabsTrigger>
             </TabsList>
             
             <TabsContent value="posts" className="mt-4">
               <div className="grid grid-cols-3 gap-1">
-                {userPosts.map(post => (
+                {getFilteredContent('post').map(post => (
                   <div key={post.id} className="aspect-square bg-gray-100 overflow-hidden rounded-sm">
                     <img src={post.imageUrl} alt="" className="w-full h-full object-cover" />
                   </div>
@@ -234,12 +331,27 @@ const Profile = () => {
             
             <TabsContent value="videos" className="mt-4">
               <div className="grid grid-cols-3 gap-1">
-                {userVideos.map(video => (
+                {getFilteredContent('video').map(video => (
                   <div key={video.id} className="aspect-square bg-gray-100 overflow-hidden rounded-sm relative">
-                    <img src={video.thumbnailUrl} alt="" className="w-full h-full object-cover" />
+                    <img src={video.imageUrl} alt="" className="w-full h-full object-cover" />
                     <div className="absolute inset-0 flex items-center justify-center">
                       <div className="w-10 h-10 bg-white/30 rounded-full flex items-center justify-center backdrop-blur-sm">
                         <div className="w-0 h-0 border-t-8 border-t-transparent border-b-8 border-b-transparent border-l-[14px] border-l-white ml-1"></div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="clips" className="mt-4">
+              <div className="grid grid-cols-3 gap-1">
+                {getFilteredContent('clip').map(clip => (
+                  <div key={clip.id} className="aspect-square bg-gray-100 overflow-hidden rounded-sm relative">
+                    <img src={clip.imageUrl} alt="" className="w-full h-full object-cover" />
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="w-10 h-10 bg-white/30 rounded-full flex items-center justify-center backdrop-blur-sm">
+                        <Play className="w-5 h-5 text-white fill-white" />
                       </div>
                     </div>
                   </div>
@@ -257,7 +369,7 @@ const Profile = () => {
             <DialogTitle>{followType === 'followers' ? 'Followers' : 'Following'}</DialogTitle>
           </DialogHeader>
           <div className="max-h-[60vh] overflow-y-auto">
-            {(followType === 'followers' ? followers : following).map(user => (
+            {userProfile && (followType === 'followers' ? userProfile.followers : userProfile.following).map((user: any) => (
               <div key={user.id} className="flex items-center gap-3 p-3 hover:bg-gray-50 rounded-lg">
                 <Avatar className="h-10 w-10">
                   {user.avatar ? (
