@@ -1,4 +1,3 @@
-
 import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -11,7 +10,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
-import { useNavigate } from 'react-router-dom';
 import ImageUploader from '../components/ImageUploader';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -124,9 +122,7 @@ const Profile = () => {
   const [userPosts, setUserPosts] = useState<Post[]>([]);
   const [isOwnProfile, setIsOwnProfile] = useState(true);
   
-  // Load user data based on username
   useEffect(() => {
-    // Default to first user if no username specified
     const targetUsername = username || 'johndoe';
     const user = mockUsers.find(u => u.username === targetUsername);
     
@@ -137,24 +133,20 @@ const Profile = () => {
       setProfileBio(user.bio || '');
       setProfilePicture(user.profilePicture);
       
-      // Filter posts for this user from mockPosts
       const posts = mockPosts.filter(post => post.userId === user.username);
       
-      // Check for user-uploaded content in localStorage
       try {
         const userContent = JSON.parse(localStorage.getItem('userContent') || '[]');
         const userSpecificContent = userContent.filter((item: Post) => 
           item.userId === user.username || (!username && item.userId === 'johndoe')
         );
         
-        // Combine mock posts with user-uploaded content
         setUserPosts([...userSpecificContent, ...posts]);
       } catch (error) {
         console.error('Error loading user content:', error);
         setUserPosts(posts);
       }
       
-      // Determine if this is the logged-in user's profile
       setIsOwnProfile(targetUsername === 'johndoe' || !username);
     }
   }, [username]);
@@ -221,7 +213,6 @@ const Profile = () => {
   };
 
   const handleShareProfile = () => {
-    // Share profile by copying link to clipboard
     const profileUrl = window.location.href;
     navigator.clipboard.writeText(profileUrl)
       .then(() => toast.success('Profile link copied to clipboard!'))
@@ -268,7 +259,6 @@ const Profile = () => {
           transition={{ duration: 0.6 }}
         >
           <div className="relative flex items-center gap-4">
-            {/* Profile Picture */}
             <div 
               className={`w-32 h-32 rounded-full bg-toon-blue/10 flex items-center justify-center overflow-hidden ${isOwnProfile ? 'cursor-pointer' : ''}`}
               onClick={() => isOwnProfile && handleEditProfilePicture()}
@@ -284,7 +274,6 @@ const Profile = () => {
               )}
             </div>
             
-            {/* Edit profile button (only shown for own profile) */}
             {isOwnProfile && (
               <motion.button
                 className="p-3 rounded-full bg-toon-blue/10 flex items-center justify-center hover:bg-toon-blue/20 transition-colors"
@@ -323,7 +312,6 @@ const Profile = () => {
           </div>
         </motion.div>
         
-        {/* User Content Tabs */}
         <div className="max-w-3xl mx-auto">
           <Tabs defaultValue="posts" value={activeTab} onValueChange={setActiveTab}>
             <TabsList className="grid w-full grid-cols-3 mb-8">
@@ -375,7 +363,6 @@ const Profile = () => {
         </div>
       </main>
       
-      {/* Followers/Following Dialog */}
       <Dialog open={showFollowDialog} onOpenChange={setShowFollowDialog}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -411,7 +398,6 @@ const Profile = () => {
         </DialogContent>
       </Dialog>
       
-      {/* Edit Profile Dialog */}
       <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -478,7 +464,6 @@ const Profile = () => {
         </DialogContent>
       </Dialog>
       
-      {/* Profile Picture Dialog */}
       <Dialog open={showProfilePictureDialog} onOpenChange={setShowProfilePictureDialog}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>

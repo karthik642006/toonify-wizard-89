@@ -1,13 +1,13 @@
 
+import React, { useState, useContext } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { useState, useEffect, useContext } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
-import { AuthContext } from '../App';
+import { AuthContext } from '../utils/authContextImport'; // Fixed import
 
 const VerifyOTP = () => {
   const location = useLocation();
