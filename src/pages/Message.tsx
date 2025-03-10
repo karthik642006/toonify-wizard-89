@@ -1,14 +1,15 @@
 
 import { motion } from 'framer-motion';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import BottomNavigation from '../components/BottomNavigation';
-import { MessageCircle, Search, UserRound, SendHorizontal } from 'lucide-react';
+import { MessageCircle, Search, UserRound, SendHorizontal, Plus, Heart, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useToast } from "@/hooks/use-toast";
 
 const Message = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -20,14 +21,23 @@ const Message = () => {
   }>(null);
   const [messageInput, setMessageInput] = useState('');
   const [chats, setChats] = useState<Record<number, Array<{ text: string; sent: boolean; timestamp: Date }>>>({});
+  const [showStory, setShowStory] = useState(false);
+  const [currentStoryIndex, setCurrentStoryIndex] = useState(0);
+  const [currentStoryUser, setCurrentStoryUser] = useState<{ id: number; name: string; hasStory: boolean; content?: string }>({ id: 0, name: '', hasStory: false });
+  const [showUploadStory, setShowUploadStory] = useState(false);
+  const [storyContent, setStoryContent] = useState('');
+  const [storyLiked, setStoryLiked] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { toast } = useToast();
   
-  // Sample stories data - in a real app, this would come from an API
+  // Sample stories data with My Story as first entry
   const stories = [
-    { id: 1, name: 'Alex Johnson', hasStory: true },
-    { id: 2, name: 'Maria Garcia', hasStory: true },
+    { id: 0, name: 'My Story', hasStory: true, content: 'This is my story content!' },
+    { id: 1, name: 'Alex Johnson', hasStory: true, content: 'Alex posted a new photo!' },
+    { id: 2, name: 'Maria Garcia', hasStory: true, content: 'Check out my new transformation!' },
     { id: 3, name: 'Tyler Wilson', hasStory: false },
-    { id: 4, name: 'Emma Thompson', hasStory: true },
-    { id: 5, name: 'Carlos Rodriguez', hasStory: true },
+    { id: 4, name: 'Emma Thompson', hasStory: true, content: 'Having a great day!' },
+    { id: 5, name: 'Carlos Rodriguez', hasStory: true, content: 'New cartoon style available!' },
   ];
 
   // Combined list of all connections (followers and following)
@@ -85,6 +95,80 @@ const Message = () => {
     }, 1000);
   };
 
+  const handleStoryClick = (story: typeof stories[0], index: number) => {
+    if (index === 0) {
+      // My Story - open upload dialog if no story
+      setShowUploadStory(true);
+    } else if (story.hasStory) {
+      // View other user's story
+      setCurrentStoryUser(story);
+      setCurrentStoryIndex(index);
+      setShowStory(true);
+      setStoryLiked(false);
+    }
+  };
+
+  const handleUploadStory = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Simulate story upload
+      toast({
+        title: "Story uploaded",
+        description: "Your story has been uploaded successfully!",
+      });
+      setShowUploadStory(false);
+    }
+  };
+
+  const nextStory = () => {
+    if (currentStoryIndex < stories.length - 1) {
+      const nextIndex = currentStoryIndex + 1;
+      if (stories[nextIndex].hasStory) {
+        setCurrentStoryUser(stories[nextIndex]);
+        setCurrentStoryIndex(nextIndex);
+        setStoryLiked(false);
+      } else {
+        // Skip stories that don't have content
+        setCurrentStoryIndex(nextIndex);
+        nextStory();
+      }
+    } else {
+      setShowStory(false); // Close when we reach the end
+    }
+  };
+
+  const prevStory = () => {
+    if (currentStoryIndex > 1) { // Don't go back to My Story
+      const prevIndex = currentStoryIndex - 1;
+      if (stories[prevIndex].hasStory) {
+        setCurrentStoryUser(stories[prevIndex]);
+        setCurrentStoryIndex(prevIndex);
+        setStoryLiked(false);
+      } else {
+        // Skip stories that don't have content
+        setCurrentStoryIndex(prevIndex);
+        prevStory();
+      }
+    }
+  };
+
+  const handleStoryMessage = () => {
+    if (currentStoryUser) {
+      // Find the corresponding user in connections
+      const user = allConnections.find(u => u.name === currentStoryUser.name);
+      if (user) {
+        setShowStory(false);
+        openChat(user);
+      }
+    }
+  };
+
   return (
     <div className="min-h-screen">
       <Header />
@@ -107,9 +191,6 @@ const Message = () => {
           <h1 className="text-4xl sm:text-5xl font-bold mb-4 bg-gradient-to-r from-toon-blue to-toon-purple bg-clip-text text-transparent">
             Your Conversations
           </h1>
-          <p className="text-lg text-gray-600 mb-4">
-            Connect with other creators and share your transformations.
-          </p>
         </motion.div>
         
         {/* Stories section */}
@@ -121,15 +202,19 @@ const Message = () => {
         >
           <div className="overflow-x-auto pb-4">
             <div className="flex space-x-4 px-2">
-              {stories.map((story) => (
+              {stories.map((story, index) => (
                 <motion.div 
                   key={story.id}
                   className="flex flex-col items-center"
                   whileHover={{ y: -2 }}
+                  onClick={() => handleStoryClick(story, index)}
                 >
                   <div className={`w-16 h-16 rounded-full flex items-center justify-center cursor-pointer mb-1 ${story.hasStory ? 'ring-2 ring-toon-blue p-0.5' : ''}`}>
-                    <div className="bg-toon-blue/10 rounded-full w-full h-full flex items-center justify-center">
-                      <UserRound className="w-8 h-8 text-toon-blue" />
+                    <div className="bg-toon-blue/10 rounded-full w-full h-full flex items-center justify-center relative">
+                      {index === 0 && (
+                        <Plus className="w-6 h-6 text-toon-blue absolute" />
+                      )}
+                      <UserRound className={`w-8 h-8 text-toon-blue ${index === 0 ? 'opacity-50' : ''}`} />
                     </div>
                   </div>
                   <p className="text-xs text-center truncate w-20">{story.name}</p>
@@ -256,6 +341,139 @@ const Message = () => {
               <SendHorizontal className="h-4 w-4 mr-2" />
               Send
             </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Story View Dialog */}
+      <Dialog open={showStory} onOpenChange={setShowStory}>
+        <DialogContent className="sm:max-w-md max-h-[90vh] p-0 overflow-hidden bg-black text-white">
+          <div 
+            className="relative h-[70vh] flex items-center justify-center"
+            onTouchStart={(e) => {
+              const touchStartX = e.touches[0].clientX;
+              
+              const handleTouchEnd = (e: TouchEvent) => {
+                const touchEndX = e.changedTouches[0].clientX;
+                const diff = touchStartX - touchEndX;
+                
+                if (diff > 50) {
+                  nextStory(); // Swiped left
+                } else if (diff < -50) {
+                  prevStory(); // Swiped right
+                }
+                
+                document.removeEventListener('touchend', handleTouchEnd);
+              };
+              
+              document.addEventListener('touchend', handleTouchEnd);
+            }}
+          >
+            <div className="absolute top-4 right-4 z-10">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="rounded-full bg-black/30 text-white hover:bg-black/50"
+                onClick={() => setShowStory(false)}
+              >
+                <X className="h-5 w-5" />
+              </Button>
+            </div>
+            
+            {/* Story navigation */}
+            <div className="absolute top-1/2 left-4 transform -translate-y-1/2 z-10">
+              {currentStoryIndex > 1 && (
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="rounded-full bg-black/30 text-white hover:bg-black/50"
+                  onClick={prevStory}
+                >
+                  <ChevronLeft className="h-6 w-6" />
+                </Button>
+              )}
+            </div>
+            
+            <div className="absolute top-1/2 right-4 transform -translate-y-1/2 z-10">
+              {currentStoryIndex < stories.length - 1 && (
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="rounded-full bg-black/30 text-white hover:bg-black/50"
+                  onClick={nextStory}
+                >
+                  <ChevronRight className="h-6 w-6" />
+                </Button>
+              )}
+            </div>
+            
+            {/* Story content */}
+            <div className="flex flex-col items-center justify-center w-full h-full">
+              <div className="text-center py-6">
+                {currentStoryUser.content}
+              </div>
+            </div>
+            
+            {/* Story user info */}
+            <div className="absolute top-4 left-4 flex items-center gap-2">
+              <Avatar className="h-10 w-10 border border-white">
+                <AvatarFallback className="bg-blue-500/50">
+                  <UserRound className="h-5 w-5 text-white" />
+                </AvatarFallback>
+              </Avatar>
+              <span className="text-sm font-medium">{currentStoryUser.name}</span>
+            </div>
+            
+            {/* Story interactions */}
+            <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-4">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="rounded-full bg-black/30 text-white hover:bg-black/50"
+                onClick={() => setStoryLiked(!storyLiked)}
+              >
+                <Heart className={`h-6 w-6 ${storyLiked ? 'fill-red-500 text-red-500' : ''}`} />
+              </Button>
+              
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="rounded-full bg-black/30 text-white hover:bg-black/50"
+                onClick={handleStoryMessage}
+              >
+                <MessageCircle className="h-6 w-6" />
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Upload Story Dialog */}
+      <Dialog open={showUploadStory} onOpenChange={setShowUploadStory}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Upload a Story</DialogTitle>
+          </DialogHeader>
+          
+          <div className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-gray-300 rounded-lg">
+            <input
+              type="file"
+              ref={fileInputRef}
+              className="hidden"
+              accept="image/*,video/*"
+              onChange={handleFileChange}
+            />
+            <Button 
+              variant="outline" 
+              onClick={handleUploadStory}
+              className="flex flex-col items-center gap-2 h-auto py-6"
+            >
+              <Plus className="h-8 w-8" />
+              <span>Upload photo or video</span>
+            </Button>
+            <p className="text-xs text-gray-500 mt-2">
+              Tap to select a photo or video from your gallery
+            </p>
           </div>
         </DialogContent>
       </Dialog>

@@ -1,10 +1,10 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import Header from '../components/Header';
+import { useNavigate } from 'react-router-dom';
 import Footer from '../components/Footer';
 import BottomNavigation from '../components/BottomNavigation';
-import { Film, Heart, Share, MessageCircle, MoreVertical, ArrowUp, ArrowDown, UserRound } from 'lucide-react';
+import { Film, Heart, Share, MessageCircle, MoreVertical, UserRound } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
@@ -21,7 +21,8 @@ const mockClips = [
     likes: 1204,
     comments: 85,
     isLiked: false,
-    followers: 2345
+    followers: 2345,
+    isFollowing: false
   },
   {
     id: '2',
@@ -32,7 +33,8 @@ const mockClips = [
     likes: 3421,
     comments: 129,
     isLiked: false,
-    followers: 5678
+    followers: 5678,
+    isFollowing: false
   },
   {
     id: '3',
@@ -43,7 +45,8 @@ const mockClips = [
     likes: 5672,
     comments: 231,
     isLiked: false,
-    followers: 8932
+    followers: 8932,
+    isFollowing: false
   }
 ];
 
@@ -54,6 +57,7 @@ const Clips = () => {
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   // Handle swipe up to next clip
   const handleSwipeUp = () => {
@@ -108,6 +112,29 @@ const Clips = () => {
     }));
   };
 
+  // Follow functionality
+  const handleFollow = (clipId: string, event: React.MouseEvent) => {
+    event.stopPropagation();
+    setClips(prevClips => prevClips.map(clip => {
+      if (clip.id === clipId) {
+        return {
+          ...clip,
+          followers: clip.isFollowing ? clip.followers - 1 : clip.followers + 1,
+          isFollowing: !clip.isFollowing
+        };
+      }
+      return clip;
+    }));
+    
+    const clip = clips.find(c => c.id === clipId);
+    if (clip) {
+      toast({
+        title: clip.isFollowing ? "Unfollowed" : "Followed",
+        description: clip.isFollowing ? `You unfollowed @${clip.username}` : `You are now following @${clip.username}`,
+      });
+    }
+  };
+
   // Show comment dialog
   const handleCommentClick = () => {
     setIsCommentOpen(true);
@@ -126,11 +153,19 @@ const Clips = () => {
     });
   };
 
+  // Navigate to profile
+  const handleProfileClick = (username: string, event: React.MouseEvent) => {
+    event.stopPropagation();
+    navigate(`/profile`); // In a real app, you'd navigate to the specific user's profile
+    toast({
+      title: "Profile",
+      description: `Viewing ${username}'s profile`,
+    });
+  };
+
   return (
     <div className="min-h-screen bg-black">
-      <Header />
-      
-      <main className="h-[calc(100vh-120px)] pt-16 relative overflow-hidden">
+      <main className="h-screen relative overflow-hidden">
         {clips.length > 0 ? (
           <motion.div 
             className="h-full w-full relative overflow-hidden"
@@ -167,12 +202,34 @@ const Clips = () => {
                 
                 {/* Creator Profile - Bottom Left */}
                 <div className="absolute left-4 bottom-24 flex items-center z-20">
-                  <Avatar className="h-12 w-12 border-2 border-white">
+                  <Avatar 
+                    className="h-12 w-12 border-2 border-white cursor-pointer"
+                    onClick={(e) => handleProfileClick(clip.username, e)}
+                  >
                     <AvatarImage src={clip.profileImage} alt={clip.username} />
                     <AvatarFallback>{clip.username.charAt(0).toUpperCase()}</AvatarFallback>
                   </Avatar>
                   <div className="ml-3 text-white">
-                    <h3 className="font-bold text-base">@{clip.username}</h3>
+                    <div className="flex items-center gap-2">
+                      <h3 
+                        className="font-bold text-base cursor-pointer"
+                        onClick={(e) => handleProfileClick(clip.username, e)}
+                      >
+                        @{clip.username}
+                      </h3>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className={`py-0 px-2 h-6 text-xs rounded-full ${
+                          clip.isFollowing 
+                            ? 'bg-white/10 text-white border-white/20' 
+                            : 'bg-white text-black'
+                        }`}
+                        onClick={(e) => handleFollow(clip.id, e)}
+                      >
+                        {clip.isFollowing ? 'Following' : 'Follow'}
+                      </Button>
+                    </div>
                     <p className="text-xs opacity-90">{clip.followers.toLocaleString()} followers</p>
                   </div>
                 </div>
@@ -223,30 +280,12 @@ const Clips = () => {
                     <MoreVertical className="w-6 h-6" />
                   </Button>
                 </div>
-                
-                {/* Swipe indicators */}
-                <div className="absolute right-4 top-1/2 transform -translate-y-1/2 flex flex-col gap-6 items-center text-white/70 z-20">
-                  {currentClipIndex > 0 && (
-                    <div className="flex flex-col items-center">
-                      <ArrowUp className="w-6 h-6 animate-bounce" />
-                      <span className="text-xs">Prev</span>
-                    </div>
-                  )}
-                  {currentClipIndex < clips.length - 1 && (
-                    <div className="flex flex-col items-center mt-4">
-                      <ArrowDown className="w-6 h-6 animate-bounce" />
-                      <span className="text-xs">Next</span>
-                    </div>
-                  )}
-                </div>
               </div>
             ))}
           </motion.div>
         ) : (
           <div className="flex flex-col items-center justify-center h-full">
             <Film className="w-24 h-24 text-toon-blue/20 mb-6" />
-            <p className="text-xl text-gray-400">No clips available</p>
-            <p className="text-gray-400 mt-2">Check back later for new content</p>
           </div>
         )}
       </main>

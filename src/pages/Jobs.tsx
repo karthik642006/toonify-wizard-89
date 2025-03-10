@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import BottomNavigation from '../components/BottomNavigation';
-import { Briefcase, GraduationCap, ShoppingBag, Store } from 'lucide-react';
+import { Briefcase, BookOpen, ShoppingBag, Store } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 
@@ -13,9 +13,9 @@ const Jobs = () => {
   const [activeCategory, setActiveCategory] = useState<JobCategory>('jobs');
   
   const categories = [
-    { id: 'internships', label: 'Internships', icon: GraduationCap },
+    { id: 'internships', label: 'Internships', icon: BookOpen },
     { id: 'jobs', label: 'Jobs', icon: Briefcase },
-    { id: 'courses', label: 'Courses', icon: GraduationCap },
+    { id: 'courses', label: 'Courses', icon: BookOpen },
     { id: 'shop', label: 'Shop', icon: Store },
   ];
 
@@ -41,18 +41,15 @@ const Jobs = () => {
           <h1 className="text-4xl sm:text-5xl font-bold mb-4 bg-gradient-to-r from-toon-blue to-toon-purple bg-clip-text text-transparent">
             Your Processing Queue
           </h1>
-          <p className="text-lg text-gray-600">
-            Track the status of your transformation jobs and manage your queue.
-          </p>
         </motion.div>
         
-        {/* Category Tabs */}
-        <div className="flex overflow-x-auto justify-center gap-2 md:gap-3 mb-8 pb-2">
+        {/* Category Tabs - Reduced size to match home page */}
+        <div className="flex overflow-x-auto justify-center gap-2 mb-6 pb-2">
           {categories.map(category => (
             <motion.button
               key={category.id}
               className={cn(
-                "flex flex-col items-center gap-1 px-3 py-2 rounded-lg whitespace-nowrap transition-colors",
+                "flex flex-col items-center gap-1 px-2 py-1.5 rounded-lg whitespace-nowrap transition-colors text-xs",
                 activeCategory === category.id 
                   ? "bg-toon-blue text-white" 
                   : "bg-gray-100 text-gray-700 hover:bg-gray-200"
@@ -61,43 +58,35 @@ const Jobs = () => {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
-              <category.icon className="w-4 h-4" />
+              <category.icon className="w-3.5 h-3.5" />
               <span className="text-xs font-medium">{category.label}</span>
             </motion.button>
           ))}
         </div>
         
         {/* Content based on selected category */}
-        <div className="flex flex-col items-center justify-center py-12">
+        <div className="flex flex-col items-center justify-center py-8">
           {activeCategory === 'jobs' && (
             <>
-              <Briefcase className="w-16 h-16 text-toon-blue/20 mb-6" />
-              <p className="text-xl text-gray-400">No active jobs</p>
-              <p className="text-gray-400 mt-2">Your transformation jobs will appear here</p>
+              <Briefcase className="w-12 h-12 text-toon-blue/20 mb-4" />
             </>
           )}
           
           {activeCategory === 'internships' && (
             <>
-              <GraduationCap className="w-16 h-16 text-toon-blue/20 mb-6" />
-              <p className="text-xl text-gray-400">No internships found</p>
-              <p className="text-gray-400 mt-2">Available internships will appear here</p>
+              <BookOpen className="w-12 h-12 text-toon-blue/20 mb-4" />
             </>
           )}
           
           {activeCategory === 'courses' && (
             <>
-              <GraduationCap className="w-16 h-16 text-toon-blue/20 mb-6" />
-              <p className="text-xl text-gray-400">No courses available</p>
-              <p className="text-gray-400 mt-2">Recommended courses will appear here</p>
+              <BookOpen className="w-12 h-12 text-toon-blue/20 mb-4" />
             </>
           )}
           
           {activeCategory === 'shop' && (
             <>
-              <ShoppingBag className="w-16 h-16 text-toon-blue/20 mb-6" />
-              <p className="text-xl text-gray-400">Shop is empty</p>
-              <p className="text-gray-400 mt-2">Products will appear here soon</p>
+              <ShoppingBag className="w-12 h-12 text-toon-blue/20 mb-4" />
             </>
           )}
         </div>
