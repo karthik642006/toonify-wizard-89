@@ -47,11 +47,8 @@ const Upload = () => {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.3, duration: 0.4 }}
           >
-            Create New Content
+            Upload
           </motion.div>
-          <h1 className="text-4xl sm:text-5xl font-bold mb-4 bg-gradient-to-r from-toon-blue to-toon-purple bg-clip-text text-transparent">
-            Share Your Creativity
-          </h1>
         </motion.div>
         
         <div className="max-w-3xl mx-auto">
@@ -82,8 +79,6 @@ const Upload = () => {
             <TabsContent value="clip" className="mt-6">
               <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center">
                 <Film className="w-16 h-16 mx-auto text-gray-400 mb-4" />
-                <h3 className="text-lg font-medium mb-2">Upload a Short Clip</h3>
-                <p className="text-gray-500 mb-6">Select a short video clip (up to 60 seconds)</p>
                 <Button>Select Video</Button>
               </div>
             </TabsContent>
@@ -91,8 +86,6 @@ const Upload = () => {
             <TabsContent value="video" className="mt-6">
               <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center">
                 <Video className="w-16 h-16 mx-auto text-gray-400 mb-4" />
-                <h3 className="text-lg font-medium mb-2">Upload a Video</h3>
-                <p className="text-gray-500 mb-6">Select a longer video (up to 10 minutes)</p>
                 <Button>Select Video</Button>
               </div>
             </TabsContent>
@@ -109,7 +102,7 @@ const Upload = () => {
                 className="px-6 py-3 bg-toon-blue text-white rounded-lg font-medium hover:bg-toon-blue/90 transition-colors"
                 onClick={handleUpload}
               >
-                Upload {selectedTab.charAt(0).toUpperCase() + selectedTab.slice(1)}
+                Upload
               </Button>
             </motion.div>
           )}

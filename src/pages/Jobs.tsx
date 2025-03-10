@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import BottomNavigation from '../components/BottomNavigation';
-import { Briefcase, BookOpen, ShoppingBag, Store } from 'lucide-react';
+import { Briefcase, GraduationCap, ShoppingBag, Store } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 
@@ -13,9 +13,9 @@ const Jobs = () => {
   const [activeCategory, setActiveCategory] = useState<JobCategory>('jobs');
   
   const categories = [
-    { id: 'internships', label: 'Internships', icon: BookOpen },
+    { id: 'internships', label: 'Internships', icon: GraduationCap },
     { id: 'jobs', label: 'Jobs', icon: Briefcase },
-    { id: 'courses', label: 'Courses', icon: BookOpen },
+    { id: 'courses', label: 'Courses', icon: ShoppingBag },
     { id: 'shop', label: 'Shop', icon: Store },
   ];
 
@@ -36,11 +36,8 @@ const Jobs = () => {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.3, duration: 0.4 }}
           >
-            Transformation Jobs
+            Jobs
           </motion.div>
-          <h1 className="text-4xl sm:text-5xl font-bold mb-4 bg-gradient-to-r from-toon-blue to-toon-purple bg-clip-text text-transparent">
-            Your Processing Queue
-          </h1>
         </motion.div>
         
         {/* Category Tabs - Reduced size to match home page */}
@@ -74,19 +71,19 @@ const Jobs = () => {
           
           {activeCategory === 'internships' && (
             <>
-              <BookOpen className="w-12 h-12 text-toon-blue/20 mb-4" />
+              <GraduationCap className="w-12 h-12 text-toon-blue/20 mb-4" />
             </>
           )}
           
           {activeCategory === 'courses' && (
             <>
-              <BookOpen className="w-12 h-12 text-toon-blue/20 mb-4" />
+              <ShoppingBag className="w-12 h-12 text-toon-blue/20 mb-4" />
             </>
           )}
           
           {activeCategory === 'shop' && (
             <>
-              <ShoppingBag className="w-12 h-12 text-toon-blue/20 mb-4" />
+              <Store className="w-12 h-12 text-toon-blue/20 mb-4" />
             </>
           )}
         </div>

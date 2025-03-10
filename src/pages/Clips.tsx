@@ -2,9 +2,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import Footer from '../components/Footer';
 import BottomNavigation from '../components/BottomNavigation';
-import { Film, Heart, Share, MessageCircle, MoreVertical, UserRound } from 'lucide-react';
+import { Heart, Share, MessageCircle, MoreVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
@@ -17,7 +16,6 @@ const mockClips = [
     videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-girl-in-neon-sign-1232-large.mp4',
     username: 'creativecreator',
     profileImage: 'https://i.pravatar.cc/150?img=32',
-    description: 'Neon lights in the city #neon #cityvibes',
     likes: 1204,
     comments: 85,
     isLiked: false,
@@ -29,7 +27,6 @@ const mockClips = [
     videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-tree-with-yellow-flowers-1173-large.mp4',
     username: 'naturelover',
     profileImage: 'https://i.pravatar.cc/150?img=12',
-    description: 'Spring has finally arrived! #nature #spring',
     likes: 3421,
     comments: 129,
     isLiked: false,
@@ -41,7 +38,6 @@ const mockClips = [
     videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-waves-in-the-water-1164-large.mp4',
     username: 'oceanview',
     profileImage: 'https://i.pravatar.cc/150?img=39',
-    description: 'Peaceful waves on a sunny day #ocean #relax',
     likes: 5672,
     comments: 231,
     isLiked: false,
@@ -130,7 +126,6 @@ const Clips = () => {
     if (clip) {
       toast({
         title: clip.isFollowing ? "Unfollowed" : "Followed",
-        description: clip.isFollowing ? `You unfollowed @${clip.username}` : `You are now following @${clip.username}`,
       });
     }
   };
@@ -149,18 +144,13 @@ const Clips = () => {
   const handleMoreOptions = () => {
     toast({
       title: "More options",
-      description: "This feature will be available soon!",
     });
   };
 
-  // Navigate to profile
+  // Navigate to uploader's profile, not user's own profile
   const handleProfileClick = (username: string, event: React.MouseEvent) => {
     event.stopPropagation();
-    navigate(`/profile`); // In a real app, you'd navigate to the specific user's profile
-    toast({
-      title: "Profile",
-      description: `Viewing ${username}'s profile`,
-    });
+    navigate(`/profile/${username}`); // Navigate to uploader's profile
   };
 
   return (
@@ -209,34 +199,20 @@ const Clips = () => {
                     <AvatarImage src={clip.profileImage} alt={clip.username} />
                     <AvatarFallback>{clip.username.charAt(0).toUpperCase()}</AvatarFallback>
                   </Avatar>
-                  <div className="ml-3 text-white">
-                    <div className="flex items-center gap-2">
-                      <h3 
-                        className="font-bold text-base cursor-pointer"
-                        onClick={(e) => handleProfileClick(clip.username, e)}
-                      >
-                        @{clip.username}
-                      </h3>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className={`py-0 px-2 h-6 text-xs rounded-full ${
-                          clip.isFollowing 
-                            ? 'bg-white/10 text-white border-white/20' 
-                            : 'bg-white text-black'
-                        }`}
-                        onClick={(e) => handleFollow(clip.id, e)}
-                      >
-                        {clip.isFollowing ? 'Following' : 'Follow'}
-                      </Button>
-                    </div>
-                    <p className="text-xs opacity-90">{clip.followers.toLocaleString()} followers</p>
+                  <div className="ml-3">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className={`py-0 px-3 h-7 text-xs rounded-full ${
+                        clip.isFollowing 
+                          ? 'bg-white/10 text-white border-white/20' 
+                          : 'bg-white text-black border-none'
+                      }`}
+                      onClick={(e) => handleFollow(clip.id, e)}
+                    >
+                      {clip.isFollowing ? 'Following' : 'Follow'}
+                    </Button>
                   </div>
-                </div>
-                
-                {/* Clip Description */}
-                <div className="absolute bottom-16 left-4 right-16 text-white z-20 mt-2">
-                  <p className="text-sm opacity-90">{clip.description}</p>
                 </div>
                 
                 {/* Action Buttons (Right Side) */}
@@ -285,7 +261,7 @@ const Clips = () => {
           </motion.div>
         ) : (
           <div className="flex flex-col items-center justify-center h-full">
-            <Film className="w-24 h-24 text-toon-blue/20 mb-6" />
+            {/* Empty state */}
           </div>
         )}
       </main>
@@ -294,14 +270,13 @@ const Clips = () => {
       <Dialog open={isCommentOpen} onOpenChange={setIsCommentOpen}>
         <DialogContent className="max-w-md max-h-[70vh] overflow-y-auto">
           <div className="space-y-4">
-            <h2 className="text-xl font-bold">Comments</h2>
             <div className="space-y-4">
               {Array.from({ length: 5 }).map((_, i) => (
                 <div key={i} className="flex gap-3">
                   <div className="w-8 h-8 rounded-full bg-gray-200"></div>
                   <div>
                     <p className="font-medium text-sm">User{i + 1}</p>
-                    <p className="text-sm text-gray-600">This is an awesome clip! Love the content.</p>
+                    <p className="text-sm text-gray-600">This is an awesome clip!</p>
                   </div>
                 </div>
               ))}
@@ -322,7 +297,6 @@ const Clips = () => {
       {/* Share Dialog */}
       <Dialog open={shareDialogOpen} onOpenChange={setShareDialogOpen}>
         <DialogContent className="max-w-xs">
-          <h2 className="text-lg font-bold mb-4">Share this clip</h2>
           <div className="grid grid-cols-4 gap-4">
             {['Instagram', 'Twitter', 'Facebook', 'WhatsApp', 'TikTok', 'Email', 'Copy Link', 'More'].map((platform) => (
               <div 
@@ -331,7 +305,6 @@ const Clips = () => {
                 onClick={() => {
                   toast({
                     title: "Shared!",
-                    description: `Clip shared to ${platform}`,
                   });
                   setShareDialogOpen(false);
                 }}

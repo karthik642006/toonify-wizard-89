@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import BottomNavigation from '../components/BottomNavigation';
-import { UserRound, Settings, Share, Pencil, Users, X, Camera, Check, ImageIcon } from 'lucide-react';
+import { UserRound, Settings, Share, Pencil, X, Check } from 'lucide-react';
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from '@/components/ui/button';
@@ -13,6 +13,7 @@ import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
 import ImageUploader from '../components/ImageUploader';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 type FollowType = 'followers' | 'following';
 
@@ -29,6 +30,7 @@ const Profile = () => {
   const [editBio, setEditBio] = useState('');
   const [profilePicture, setProfilePicture] = useState<string | null>(null);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState('posts');
   const navigate = useNavigate();
   
   const followers = [
@@ -40,6 +42,19 @@ const Profile = () => {
   const following = [
     { id: 4, name: 'Emma Thompson', avatar: null },
     { id: 5, name: 'Carlos Rodriguez', avatar: null },
+  ];
+
+  // Sample user content
+  const userPosts = [
+    { id: 1, imageUrl: 'https://i.pravatar.cc/300?img=1' },
+    { id: 2, imageUrl: 'https://i.pravatar.cc/300?img=2' },
+    { id: 3, imageUrl: 'https://i.pravatar.cc/300?img=3' },
+    { id: 4, imageUrl: 'https://i.pravatar.cc/300?img=4' },
+  ];
+  
+  const userVideos = [
+    { id: 1, thumbnailUrl: 'https://i.pravatar.cc/300?img=5' },
+    { id: 2, thumbnailUrl: 'https://i.pravatar.cc/300?img=6' },
   ];
 
   const handleShowFollowers = () => {
@@ -188,11 +203,6 @@ const Profile = () => {
               <p className="text-sm text-gray-500">Following</p>
             </motion.button>
             
-            <div className="text-center">
-              <p className="text-2xl font-bold text-toon-blue">42</p>
-              <p className="text-sm text-gray-500">Transforms</p>
-            </div>
-            
             <motion.button
               className="flex flex-col items-center"
               onClick={handleShowFollowers}
@@ -203,6 +213,41 @@ const Profile = () => {
             </motion.button>
           </div>
         </motion.div>
+        
+        {/* User Content Tabs */}
+        <div className="max-w-3xl mx-auto">
+          <Tabs defaultValue="posts" value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="grid w-full grid-cols-2 mb-8">
+              <TabsTrigger value="posts">Posts</TabsTrigger>
+              <TabsTrigger value="videos">Videos</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="posts" className="mt-4">
+              <div className="grid grid-cols-3 gap-1">
+                {userPosts.map(post => (
+                  <div key={post.id} className="aspect-square bg-gray-100 overflow-hidden rounded-sm">
+                    <img src={post.imageUrl} alt="" className="w-full h-full object-cover" />
+                  </div>
+                ))}
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="videos" className="mt-4">
+              <div className="grid grid-cols-3 gap-1">
+                {userVideos.map(video => (
+                  <div key={video.id} className="aspect-square bg-gray-100 overflow-hidden rounded-sm relative">
+                    <img src={video.thumbnailUrl} alt="" className="w-full h-full object-cover" />
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="w-10 h-10 bg-white/30 rounded-full flex items-center justify-center backdrop-blur-sm">
+                        <div className="w-0 h-0 border-t-8 border-t-transparent border-b-8 border-b-transparent border-l-[14px] border-l-white ml-1"></div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </TabsContent>
+          </Tabs>
+        </div>
       </main>
       
       {/* Followers/Following Dialog */}
@@ -332,9 +377,6 @@ const Profile = () => {
                   selectedImage={selectedImage} 
                   onClearImage={handleClearImage} 
                 />
-                <p className="text-xs text-gray-500 text-center mt-2">
-                  Upload a photo from your device or take a new one with your camera
-                </p>
               </div>
             </div>
             
