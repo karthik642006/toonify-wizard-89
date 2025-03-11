@@ -4,9 +4,11 @@ import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { Post } from '../models/post';
 import { mockUsers, mockPosts, User } from '../data/mockData';
+import { useAuth } from '../context/AuthContext';
 
 export const useProfileData = (username?: string) => {
   const navigate = useNavigate();
+  const { user, updateUserProfile } = useAuth();
   
   const [showFollowDialog, setShowFollowDialog] = useState(false);
   const [followType, setFollowType] = useState<'followers' | 'following'>('followers');
@@ -28,22 +30,24 @@ export const useProfileData = (username?: string) => {
   useEffect(() => {
     // Use a try-catch block to handle potential errors
     try {
-      const targetUsername = username || 'johndoe';
-      const user = mockUsers.find(u => u.username === targetUsername);
+      const targetUsername = username || (user?.username || 'johndoe');
+      const foundUser = mockUsers.find(u => u.username === targetUsername);
       
-      if (user) {
-        setUserProfile(user);
-        setProfileName(user.name);
-        setProfileEmail(user.email);
-        setProfileBio(user.bio || '');
-        setProfilePicture(user.profilePicture || null);
+      if (foundUser) {
+        setUserProfile(foundUser);
+        setProfileName(foundUser.name);
+        setProfileEmail(foundUser.email);
+        setProfileBio(foundUser.bio || '');
+        setProfilePicture(foundUser.profilePicture || null);
         
-        const posts = mockPosts.filter(post => post.userId === user.username);
+        // Get posts from mock data
+        let posts = mockPosts.filter(post => post.userId === foundUser.username);
         
+        // Also load user content from localStorage
         try {
           const userContent = JSON.parse(localStorage.getItem('userContent') || '[]');
           const userSpecificContent = userContent.filter((item: Post) => 
-            item.userId === user.username || (!username && item.userId === 'johndoe')
+            item.userId === foundUser.username || (!username && item.userId === 'johndoe')
           );
           
           setUserPosts([...userSpecificContent, ...posts]);
@@ -52,7 +56,7 @@ export const useProfileData = (username?: string) => {
           setUserPosts(posts);
         }
         
-        setIsOwnProfile(targetUsername === 'johndoe' || !username);
+        setIsOwnProfile(targetUsername === (user?.username || 'johndoe') || !username);
       } else {
         console.log('User not found:', targetUsername);
         setUserPosts([]);
@@ -60,7 +64,7 @@ export const useProfileData = (username?: string) => {
     } catch (error) {
       console.error('Error in useProfileData effect:', error);
     }
-  }, [username]);
+  }, [username, user]);
 
   const handleShowFollowers = () => {
     setFollowType('followers');
@@ -97,6 +101,16 @@ export const useProfileData = (username?: string) => {
     setProfileName(editName);
     setProfileEmail(editEmail);
     setProfileBio(editBio);
+    
+    // Update user context if available
+    if (updateUserProfile) {
+      updateUserProfile({
+        name: editName,
+        email: editEmail,
+        bio: editBio
+      });
+    }
+    
     setShowEditDialog(false);
     toast.success('Profile updated successfully');
   };
@@ -104,6 +118,14 @@ export const useProfileData = (username?: string) => {
   const handleSaveProfilePicture = () => {
     if (selectedImage) {
       setProfilePicture(selectedImage);
+      
+      // Update profile picture in auth context
+      if (updateUserProfile) {
+        updateUserProfile({
+          profilePicture: selectedImage
+        });
+      }
+      
       setShowProfilePictureDialog(false);
       toast.success('Profile picture updated successfully');
     } else {

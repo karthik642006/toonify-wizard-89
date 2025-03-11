@@ -3,11 +3,12 @@ import { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import BottomNavigation from '../components/BottomNavigation';
-import { Heart, Share, MessageCircle, MoreVertical } from 'lucide-react';
+import { Heart, Share, MessageCircle, MoreVertical, BookmarkPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { toast } from 'sonner';
 
 // Sample clip data - in a real app, this would come from an API
 const mockClips = [
@@ -52,9 +53,39 @@ const Clips = () => {
   const [isCommentOpen, setIsCommentOpen] = useState(false);
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [moreOptionsOpen, setMoreOptionsOpen] = useState(false);
+  const [commentText, setCommentText] = useState('');
+  const [comments, setComments] = useState<{username: string, text: string}[]>([]);
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  // Try to load user content at initialization
+  useEffect(() => {
+    try {
+      const userContent = JSON.parse(localStorage.getItem('userContent') || '[]');
+      const userClips = userContent.filter((item: any) => item.type === 'clip' || item.videoUrl);
+      
+      if (userClips.length > 0) {
+        // Format user clips to match mockClips structure
+        const formattedUserClips = userClips.map((clip: any) => ({
+          id: clip.id,
+          videoUrl: clip.videoUrl || clip.imageUrl,
+          username: clip.username || 'User',
+          profileImage: clip.profileImage || 'https://i.pravatar.cc/150?img=11',
+          likes: clip.likes || 0,
+          comments: clip.comments || 0,
+          isLiked: false,
+          followers: 2000,
+          isFollowing: false
+        }));
+        
+        // Combine user clips with mock clips
+        setClips([...formattedUserClips, ...mockClips]);
+      }
+    } catch (error) {
+      console.error("Error loading user clips:", error);
+    }
+  }, []);
 
   // Handle swipe up to next clip
   const handleSwipeUp = () => {
@@ -85,6 +116,7 @@ const Clips = () => {
       videoElement.currentTime = 0;
       videoElement.play().catch(error => {
         console.error("Error playing video:", error);
+        // If browser blocks autoplay, show play button
       });
     }
 
@@ -127,8 +159,30 @@ const Clips = () => {
     if (clip) {
       toast({
         title: clip.isFollowing ? "Unfollowed" : "Followed",
+        description: clip.isFollowing ? 
+          `You have unfollowed ${clip.username}` : 
+          `You are now following ${clip.username}`
       });
     }
+  };
+
+  // Post comment
+  const handlePostComment = () => {
+    if (!commentText.trim()) return;
+    
+    setComments(prev => [...prev, {
+      username: 'You',
+      text: commentText
+    }]);
+    
+    setCommentText('');
+    
+    // Update comment count
+    setClips(prevClips => prevClips.map((clip, i) => 
+      i === currentClipIndex 
+        ? {...clip, comments: clip.comments + 1} 
+        : clip
+    ));
   };
 
   // Show comment dialog
@@ -150,6 +204,13 @@ const Clips = () => {
   const handleProfileClick = (username: string, event: React.MouseEvent) => {
     event.stopPropagation();
     navigate(`/profile/${username}`);
+  };
+
+  // Save clip
+  const handleSave = () => {
+    const currentClip = clips[currentClipIndex];
+    toast.success(`Saved clip from ${currentClip.username}`);
+    setMoreOptionsOpen(false);
   };
 
   return (
@@ -178,7 +239,6 @@ const Clips = () => {
                   src={clip.videoUrl}
                   className="object-cover h-full w-full"
                   loop
-                  muted
                   playsInline
                   onClick={e => {
                     if (e.currentTarget.paused) {
@@ -198,7 +258,7 @@ const Clips = () => {
                     <AvatarImage src={clip.profileImage} alt={clip.username} />
                     <AvatarFallback>{clip.username.charAt(0).toUpperCase()}</AvatarFallback>
                   </Avatar>
-                  <span className="text-white text-sm font-medium mb-2">{clip.username}</span>
+                  <span className="text-white text-sm font-medium mb-2">@{clip.username}</span>
                   <Button
                     variant="outline"
                     size="sm"
@@ -211,6 +271,9 @@ const Clips = () => {
                   >
                     {clip.isFollowing ? 'Following' : 'Follow'}
                   </Button>
+                  <div className="mt-1 text-white/80 text-xs">
+                    {clip.followers.toLocaleString()} followers
+                  </div>
                 </div>
                 
                 {/* Action Buttons (Right Side) */}
@@ -259,7 +322,7 @@ const Clips = () => {
           </motion.div>
         ) : (
           <div className="flex flex-col items-center justify-center h-full">
-            {/* Empty state */}
+            <p className="text-white">No clips available</p>
           </div>
         )}
       </main>
@@ -267,17 +330,24 @@ const Clips = () => {
       {/* Comments Dialog */}
       <Dialog open={isCommentOpen} onOpenChange={setIsCommentOpen}>
         <DialogContent className="max-w-md max-h-[70vh] overflow-y-auto">
+          <DialogTitle>Comments</DialogTitle>
           <div className="space-y-4">
             <div className="space-y-4">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <div key={i} className="flex gap-3">
-                  <div className="w-8 h-8 rounded-full bg-gray-200"></div>
-                  <div>
-                    <p className="font-medium text-sm">User{i + 1}</p>
-                    <p className="text-sm text-gray-600">This is an awesome clip!</p>
+              {comments.length > 0 ? (
+                comments.map((comment, i) => (
+                  <div key={i} className="flex gap-3">
+                    <div className="w-8 h-8 rounded-full bg-gray-200"></div>
+                    <div>
+                      <p className="font-medium text-sm">{comment.username}</p>
+                      <p className="text-sm text-gray-600">{comment.text}</p>
+                    </div>
                   </div>
+                ))
+              ) : (
+                <div className="text-center py-4">
+                  <p className="text-gray-500">No comments yet. Be the first!</p>
                 </div>
-              ))}
+              )}
             </div>
             <div className="flex gap-2 pt-2 border-t">
               <div className="w-8 h-8 rounded-full bg-gray-200"></div>
@@ -285,8 +355,11 @@ const Clips = () => {
                 type="text"
                 placeholder="Add a comment..."
                 className="flex-1 border rounded-full px-4 py-1 text-sm"
+                value={commentText}
+                onChange={(e) => setCommentText(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handlePostComment()}
               />
-              <Button size="sm">Post</Button>
+              <Button size="sm" onClick={handlePostComment}>Post</Button>
             </div>
           </div>
         </DialogContent>
@@ -295,15 +368,14 @@ const Clips = () => {
       {/* Share Dialog */}
       <Dialog open={shareDialogOpen} onOpenChange={setShareDialogOpen}>
         <DialogContent className="max-w-xs">
+          <DialogTitle>Share</DialogTitle>
           <div className="grid grid-cols-4 gap-4">
             {['Instagram', 'Twitter', 'Facebook', 'WhatsApp', 'TikTok', 'Email', 'Copy Link', 'More'].map((platform) => (
               <div 
                 key={platform} 
-                className="flex flex-col items-center"
+                className="flex flex-col items-center cursor-pointer"
                 onClick={() => {
-                  toast({
-                    title: "Shared!",
-                  });
+                  toast.success(`Shared to ${platform}!`);
                   setShareDialogOpen(false);
                 }}
               >
@@ -320,17 +392,24 @@ const Clips = () => {
       {/* More Options Dialog */}
       <Dialog open={moreOptionsOpen} onOpenChange={setMoreOptionsOpen}>
         <DialogContent className="max-w-xs">
+          <DialogTitle>Options</DialogTitle>
           <div className="flex flex-col gap-2">
-            {['Report', 'Not Interested', 'Save', 'Remix', 'Cancel'].map((option) => (
+            <Button 
+              variant="ghost"
+              className="justify-start"
+              onClick={handleSave}
+            >
+              <BookmarkPlus className="mr-2 h-5 w-5" />
+              Save
+            </Button>
+            {['Report', 'Not Interested', 'Remix', 'Cancel'].map((option) => (
               <Button 
                 key={option} 
                 variant={option === 'Cancel' ? 'outline' : 'ghost'}
                 className="justify-start"
                 onClick={() => {
                   if (option !== 'Cancel') {
-                    toast({
-                      title: `${option} action selected`,
-                    });
+                    toast.success(`${option} action selected`);
                   }
                   setMoreOptionsOpen(false);
                 }}

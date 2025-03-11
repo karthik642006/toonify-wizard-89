@@ -2,10 +2,11 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Heart, MessageCircle, X, Send } from 'lucide-react';
+import { Heart, MessageCircle, X, Send, Play } from 'lucide-react';
 import { toast } from 'sonner';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '../context/AuthContext';
 
 // Mock stories data
 const mockStories = [
@@ -13,18 +14,21 @@ const mockStories = [
     id: '1',
     username: 'user1',
     imageUrl: 'https://i.pravatar.cc/300?img=1',
+    videoUrl: null,
     timestamp: '2h ago',
   },
   {
     id: '2',
     username: 'user2',
     imageUrl: 'https://i.pravatar.cc/300?img=2',
+    videoUrl: null,
     timestamp: '3h ago',
   },
   {
     id: '3',
     username: 'user3',
     imageUrl: 'https://i.pravatar.cc/300?img=3',
+    videoUrl: null,
     timestamp: '5h ago',
   }
 ];
@@ -32,11 +36,40 @@ const mockStories = [
 const Story = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [currentStoryIndex, setCurrentStoryIndex] = useState(0);
   const [liked, setLiked] = useState(false);
-  const [stories, setStories] = useState(mockStories);
+  const [stories, setStories] = useState<Array<{
+    id: string;
+    username: string;
+    imageUrl: string;
+    videoUrl: string | null;
+    timestamp: string;
+  }>>(mockStories);
   const [showMessageDialog, setShowMessageDialog] = useState(false);
   const [messageText, setMessageText] = useState('');
+  const [isPlaying, setIsPlaying] = useState(false);
+  
+  // Load user stories from localStorage
+  useEffect(() => {
+    try {
+      const userStories = JSON.parse(localStorage.getItem('userStories') || '[]');
+      
+      if (userStories.length > 0) {
+        const formattedUserStories = userStories.map((story: any) => ({
+          id: story.id,
+          username: user?.username || 'johndoe',
+          imageUrl: story.imageUrl,
+          videoUrl: story.videoUrl || null,
+          timestamp: story.timestamp || 'Just now'
+        }));
+        
+        setStories(prev => [...formattedUserStories, ...prev]);
+      }
+    } catch (error) {
+      console.error("Error loading user stories:", error);
+    }
+  }, [user]);
   
   // Find initial story index based on id
   useEffect(() => {
@@ -53,6 +86,7 @@ const Story = () => {
   const handleNextStory = () => {
     if (currentStoryIndex < stories.length - 1) {
       setCurrentStoryIndex(prev => prev + 1);
+      setIsPlaying(false);
     } else {
       handleClose();
     }
@@ -61,6 +95,7 @@ const Story = () => {
   const handlePrevStory = () => {
     if (currentStoryIndex > 0) {
       setCurrentStoryIndex(prev => prev - 1);
+      setIsPlaying(false);
     }
   };
 
@@ -78,6 +113,21 @@ const Story = () => {
       toast.success('Message sent!');
       setMessageText('');
       setShowMessageDialog(false);
+    }
+  };
+
+  const handlePlayVideo = () => {
+    const video = document.getElementById('story-video') as HTMLVideoElement;
+    if (video) {
+      if (isPlaying) {
+        video.pause();
+      } else {
+        video.play().catch(err => {
+          console.error("Error playing video:", err);
+          toast.error("Could not play video");
+        });
+      }
+      setIsPlaying(!isPlaying);
     }
   };
 
@@ -117,6 +167,7 @@ const Story = () => {
             >
               <div 
                 className={`h-full bg-white ${index === currentStoryIndex ? 'animate-progress' : index < currentStoryIndex ? 'w-full' : 'w-0'}`}
+                style={{animationDuration: '5s'}}
               />
             </div>
           ))}
@@ -125,11 +176,33 @@ const Story = () => {
         {/* Story content */}
         <div className="h-full w-full flex flex-col">
           {currentStory && (
-            <img 
-              src={currentStory.imageUrl} 
-              alt="Story" 
-              className="h-full w-full object-cover"
-            />
+            currentStory.videoUrl ? (
+              <div className="relative h-full w-full">
+                <video 
+                  id="story-video"
+                  src={currentStory.videoUrl} 
+                  className="h-full w-full object-cover" 
+                  onClick={handlePlayVideo}
+                  onEnded={handleNextStory}
+                />
+                {!isPlaying && (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <button 
+                      className="h-16 w-16 rounded-full bg-black/40 flex items-center justify-center"
+                      onClick={handlePlayVideo}
+                    >
+                      <Play className="h-8 w-8 text-white" />
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <img 
+                src={currentStory.imageUrl} 
+                alt="Story" 
+                className="h-full w-full object-cover"
+              />
+            )
           )}
         </div>
 
@@ -145,7 +218,7 @@ const Story = () => {
                 />
               </div>
               <div>
-                <p className="text-white font-medium">{currentStory?.username}</p>
+                <p className="text-white font-medium">@{currentStory?.username}</p>
                 <p className="text-white/70 text-xs">{currentStory?.timestamp}</p>
               </div>
             </div>
@@ -180,9 +253,8 @@ const Story = () => {
       {/* Direct Message Dialog */}
       <Dialog open={showMessageDialog} onOpenChange={setShowMessageDialog}>
         <DialogContent className="sm:max-w-md">
+          <DialogTitle>Send message to {currentStory?.username}</DialogTitle>
           <div className="space-y-4">
-            <h3 className="text-lg font-medium">Send message to {currentStory?.username}</h3>
-            
             <div className="flex gap-2">
               <input 
                 type="text" 

@@ -15,47 +15,63 @@ import { useAuth } from '../context/AuthContext';
 import { Post } from '../models/post';
 
 const Upload = () => {
-  const [selectedImage, setSelectedImage] = useState<{ file: File; preview: string } | null>(null);
+  const [selectedMedia, setSelectedMedia] = useState<{ file: File; preview: string; type: 'image' | 'video' | 'clip' } | null>(null);
   const [selectedTab, setSelectedTab] = useState("post");
   const [caption, setCaption] = useState('');
   const navigate = useNavigate();
   const { user } = useAuth();
 
   const handleImageSelect = (file: File, preview: string) => {
-    setSelectedImage({ file, preview });
+    setSelectedMedia({ file, preview, type: 'image' });
     toast.success('Image selected');
   };
 
-  const handleClearImage = () => {
-    setSelectedImage(null);
+  const handleVideoSelect = (file: File, preview: string, type: 'video' | 'clip') => {
+    setSelectedMedia({ file, preview, type });
+    toast.success(`${type === 'video' ? 'Video' : 'Clip'} selected`);
+  };
+
+  const handleClearMedia = () => {
+    setSelectedMedia(null);
   };
 
   const handleUpload = () => {
-    if (!selectedImage) {
-      toast.error('Please select an image first');
+    if (!selectedMedia) {
+      toast.error('Please select media first');
       return;
     }
 
     // Create a new post/video/clip object
     const newContent: Post = {
       id: uuidv4(),
-      imageUrl: selectedImage.preview,
+      imageUrl: selectedMedia.preview,
+      videoUrl: selectedMedia.type !== 'image' ? selectedMedia.preview : undefined,
       type: selectedTab as 'post' | 'video' | 'clip',
       createdAt: new Date().toISOString(),
       likes: 0,
       comments: 0,
       userId: user?.username || 'johndoe',
-      username: user?.username || 'John Doe',
-      profileImage: 'https://i.pravatar.cc/150?img=11'
+      username: user?.name || 'John Doe',
+      profileImage: user?.profilePicture || 'https://i.pravatar.cc/150?img=11'
     };
 
     // In a real app, you would save this to a database
     // For now, we'll just add it to localStorage
-    const existingContent = JSON.parse(localStorage.getItem('userContent') || '[]');
-    localStorage.setItem('userContent', JSON.stringify([newContent, ...existingContent]));
+    try {
+      const existingContent = JSON.parse(localStorage.getItem('userContent') || '[]');
+      localStorage.setItem('userContent', JSON.stringify([newContent, ...existingContent]));
+      toast.success(`${selectedTab} uploaded successfully!`);
+      navigate('/profile');
+    } catch (error) {
+      console.error("Error saving to localStorage:", error);
+      toast.error("Failed to save your upload");
+    }
+  };
 
-    toast.success(`${selectedTab} uploaded successfully!`);
-    navigate('/profile');
+  // Mock video URLs for demonstration
+  const demoVideoUrls = {
+    clip: 'https://assets.mixkit.co/videos/preview/mixkit-girl-in-neon-sign-1232-large.mp4',
+    video: 'https://assets.mixkit.co/videos/preview/mixkit-tree-with-yellow-flowers-1173-large.mp4'
   };
 
   return (
@@ -83,27 +99,79 @@ const Upload = () => {
             <TabsContent value="post" className="mt-6">
               <ImageUploader 
                 onImageSelect={handleImageSelect}
-                selectedImage={selectedImage?.preview || null}
-                onClearImage={handleClearImage}
+                selectedImage={selectedMedia?.type === 'image' ? selectedMedia.preview : null}
+                onClearImage={handleClearMedia}
               />
             </TabsContent>
             
             <TabsContent value="clip" className="mt-6">
-              <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center">
-                <Film className="w-16 h-16 mx-auto text-gray-400 mb-4" />
-                <Button onClick={() => handleImageSelect(new File([], 'clip.mp4'), 'https://i.pravatar.cc/300?img=7')}>Select Video</Button>
-              </div>
+              {selectedMedia?.type === 'clip' ? (
+                <div className="relative rounded-xl overflow-hidden aspect-video w-full shadow-sm group">
+                  <video 
+                    src={selectedMedia.preview} 
+                    className="w-full h-full object-cover" 
+                    controls
+                  />
+                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 bg-black/40 transition-opacity">
+                    <Button 
+                      variant="destructive"
+                      onClick={handleClearMedia}
+                    >
+                      Remove
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center">
+                  <Film className="w-16 h-16 mx-auto text-gray-400 mb-4" />
+                  <Button 
+                    onClick={() => handleVideoSelect(
+                      new File([], 'clip.mp4'), 
+                      demoVideoUrls.clip, 
+                      'clip'
+                    )}
+                  >
+                    Select Clip
+                  </Button>
+                </div>
+              )}
             </TabsContent>
             
             <TabsContent value="video" className="mt-6">
-              <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center">
-                <Video className="w-16 h-16 mx-auto text-gray-400 mb-4" />
-                <Button onClick={() => handleImageSelect(new File([], 'video.mp4'), 'https://i.pravatar.cc/300?img=5')}>Select Video</Button>
-              </div>
+              {selectedMedia?.type === 'video' ? (
+                <div className="relative rounded-xl overflow-hidden aspect-video w-full shadow-sm group">
+                  <video 
+                    src={selectedMedia.preview} 
+                    className="w-full h-full object-cover" 
+                    controls
+                  />
+                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 bg-black/40 transition-opacity">
+                    <Button 
+                      variant="destructive"
+                      onClick={handleClearMedia}
+                    >
+                      Remove
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center">
+                  <Video className="w-16 h-16 mx-auto text-gray-400 mb-4" />
+                  <Button 
+                    onClick={() => handleVideoSelect(
+                      new File([], 'video.mp4'), 
+                      demoVideoUrls.video,
+                      'video'
+                    )}
+                  >
+                    Select Video
+                  </Button>
+                </div>
+              )}
             </TabsContent>
           </Tabs>
           
-          {selectedImage && (
+          {selectedMedia && (
             <motion.div
               className="space-y-4"
               initial={{ opacity: 0, y: 10 }}
