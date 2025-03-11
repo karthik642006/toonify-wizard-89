@@ -1,9 +1,11 @@
 
 import { AnimatePresence, motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
-import { Sparkles, Search, Bell, UserRound, X } from 'lucide-react';
+import { Sparkles, Search, Bell, X } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { useAuth } from '../context/AuthContext';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 
 const Header = () => {
   const [scrolled, setScrolled] = useState(false);
@@ -11,6 +13,7 @@ const Header = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [showNotifications, setShowNotifications] = useState(false);
   const navigate = useNavigate();
+  const { user } = useAuth();
   
   useEffect(() => {
     const handleScroll = () => {
@@ -21,7 +24,7 @@ const Header = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const handleSearchSubmit = (e) => {
+  const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
       toast.success(`Searching for: ${searchQuery}`);
@@ -64,19 +67,11 @@ const Header = () => {
             onClick={handleProfileClick} 
             className="p-2 rounded-full hover:bg-gray-100/50 transition-colors"
           >
-            <UserRound className="w-5 h-5" />
+            <Avatar className="h-7 w-7">
+              <AvatarImage src={user?.profilePicture} alt={user?.name || "Profile"} />
+              <AvatarFallback>{user?.name?.charAt(0) || "U"}</AvatarFallback>
+            </Avatar>
           </button>
-        </motion.div>
-        
-        {/* App name in the center */}
-        <motion.div 
-          className="flex items-center gap-2"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.1, duration: 0.5 }}
-        >
-          <Sparkles className="w-6 h-6 text-toon-blue" />
-          <span className="font-semibold text-xl tracking-tight">Toonify</span>
         </motion.div>
         
         {/* Search and notification icons on the right */}

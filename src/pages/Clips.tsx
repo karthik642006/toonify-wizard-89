@@ -5,10 +5,11 @@ import { useNavigate } from 'react-router-dom';
 import BottomNavigation from '../components/BottomNavigation';
 import { Heart, Share, MessageCircle, MoreVertical, BookmarkPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { toast } from 'sonner';
+import { useAuth } from '../context/AuthContext';
 
 // Sample clip data - in a real app, this would come from an API
 const mockClips = [
@@ -56,7 +57,7 @@ const Clips = () => {
   const [commentText, setCommentText] = useState('');
   const [comments, setComments] = useState<{username: string, text: string}[]>([]);
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
-  const { toast } = useToast();
+  const { user } = useAuth();
   const navigate = useNavigate();
 
   // Try to load user content at initialization
@@ -70,8 +71,8 @@ const Clips = () => {
         const formattedUserClips = userClips.map((clip: any) => ({
           id: clip.id,
           videoUrl: clip.videoUrl || clip.imageUrl,
-          username: clip.username || 'User',
-          profileImage: clip.profileImage || 'https://i.pravatar.cc/150?img=11',
+          username: clip.username || user?.username || 'User',
+          profileImage: clip.profileImage || user?.profilePicture || 'https://i.pravatar.cc/150?img=11',
           likes: clip.likes || 0,
           comments: clip.comments || 0,
           isLiked: false,
@@ -85,7 +86,7 @@ const Clips = () => {
     } catch (error) {
       console.error("Error loading user clips:", error);
     }
-  }, []);
+  }, [user]);
 
   // Handle swipe up to next clip
   const handleSwipeUp = () => {
@@ -157,8 +158,7 @@ const Clips = () => {
     
     const clip = clips.find(c => c.id === clipId);
     if (clip) {
-      toast({
-        title: clip.isFollowing ? "Unfollowed" : "Followed",
+      toast.success(clip.isFollowing ? "Unfollowed" : "Followed", {
         description: clip.isFollowing ? 
           `You have unfollowed ${clip.username}` : 
           `You are now following ${clip.username}`
@@ -171,7 +171,7 @@ const Clips = () => {
     if (!commentText.trim()) return;
     
     setComments(prev => [...prev, {
-      username: 'You',
+      username: user?.username || 'You',
       text: commentText
     }]);
     
@@ -209,8 +209,27 @@ const Clips = () => {
   // Save clip
   const handleSave = () => {
     const currentClip = clips[currentClipIndex];
-    toast.success(`Saved clip from ${currentClip.username}`);
-    setMoreOptionsOpen(false);
+    
+    try {
+      // Get existing saved content
+      const savedContent = JSON.parse(localStorage.getItem('savedContent') || '[]');
+      
+      // Check if already saved
+      if (savedContent.some((item: any) => item.id === currentClip.id)) {
+        toast.error("You've already saved this clip");
+        return;
+      }
+      
+      // Add to saved content
+      savedContent.push(currentClip);
+      localStorage.setItem('savedContent', JSON.stringify(savedContent));
+      
+      toast.success(`Saved clip from ${currentClip.username}`);
+      setMoreOptionsOpen(false);
+    } catch (error) {
+      console.error("Error saving clip:", error);
+      toast.error("Failed to save clip");
+    }
   };
 
   return (
@@ -331,6 +350,7 @@ const Clips = () => {
       <Dialog open={isCommentOpen} onOpenChange={setIsCommentOpen}>
         <DialogContent className="max-w-md max-h-[70vh] overflow-y-auto">
           <DialogTitle>Comments</DialogTitle>
+          <DialogDescription className="sr-only">Add or view comments</DialogDescription>
           <div className="space-y-4">
             <div className="space-y-4">
               {comments.length > 0 ? (
@@ -369,13 +389,14 @@ const Clips = () => {
       <Dialog open={shareDialogOpen} onOpenChange={setShareDialogOpen}>
         <DialogContent className="max-w-xs">
           <DialogTitle>Share</DialogTitle>
+          <DialogDescription className="sr-only">Share this content</DialogDescription>
           <div className="grid grid-cols-4 gap-4">
             {['Instagram', 'Twitter', 'Facebook', 'WhatsApp', 'TikTok', 'Email', 'Copy Link', 'More'].map((platform) => (
               <div 
                 key={platform} 
                 className="flex flex-col items-center cursor-pointer"
                 onClick={() => {
-                  toast.success(`Shared to ${platform}!`);
+                  toast.success(`Shared to ${platform}`);
                   setShareDialogOpen(false);
                 }}
               >
@@ -393,6 +414,7 @@ const Clips = () => {
       <Dialog open={moreOptionsOpen} onOpenChange={setMoreOptionsOpen}>
         <DialogContent className="max-w-xs">
           <DialogTitle>Options</DialogTitle>
+          <DialogDescription className="sr-only">More options for this content</DialogDescription>
           <div className="flex flex-col gap-2">
             <Button 
               variant="ghost"
