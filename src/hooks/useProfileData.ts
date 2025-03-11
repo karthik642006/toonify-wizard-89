@@ -26,31 +26,39 @@ export const useProfileData = (username?: string) => {
   const [isOwnProfile, setIsOwnProfile] = useState(true);
   
   useEffect(() => {
-    const targetUsername = username || 'johndoe';
-    const user = mockUsers.find(u => u.username === targetUsername);
-    
-    if (user) {
-      setUserProfile(user);
-      setProfileName(user.name);
-      setProfileEmail(user.email);
-      setProfileBio(user.bio || '');
-      setProfilePicture(user.profilePicture || null);
+    // Use a try-catch block to handle potential errors
+    try {
+      const targetUsername = username || 'johndoe';
+      const user = mockUsers.find(u => u.username === targetUsername);
       
-      const posts = mockPosts.filter(post => post.userId === user.username);
-      
-      try {
-        const userContent = JSON.parse(localStorage.getItem('userContent') || '[]');
-        const userSpecificContent = userContent.filter((item: Post) => 
-          item.userId === user.username || (!username && item.userId === 'johndoe')
-        );
+      if (user) {
+        setUserProfile(user);
+        setProfileName(user.name);
+        setProfileEmail(user.email);
+        setProfileBio(user.bio || '');
+        setProfilePicture(user.profilePicture || null);
         
-        setUserPosts([...userSpecificContent, ...posts]);
-      } catch (error) {
-        console.error('Error loading user content:', error);
-        setUserPosts(posts);
+        const posts = mockPosts.filter(post => post.userId === user.username);
+        
+        try {
+          const userContent = JSON.parse(localStorage.getItem('userContent') || '[]');
+          const userSpecificContent = userContent.filter((item: Post) => 
+            item.userId === user.username || (!username && item.userId === 'johndoe')
+          );
+          
+          setUserPosts([...userSpecificContent, ...posts]);
+        } catch (error) {
+          console.error('Error loading user content:', error);
+          setUserPosts(posts);
+        }
+        
+        setIsOwnProfile(targetUsername === 'johndoe' || !username);
+      } else {
+        console.log('User not found:', targetUsername);
+        setUserPosts([]);
       }
-      
-      setIsOwnProfile(targetUsername === 'johndoe' || !username);
+    } catch (error) {
+      console.error('Error in useProfileData effect:', error);
     }
   }, [username]);
 
