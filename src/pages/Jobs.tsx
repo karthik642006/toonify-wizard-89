@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import BottomNavigation from '../components/BottomNavigation';
-import { GraduationCap, Briefcase, BookOpen, Store } from 'lucide-react';
+import { Briefcase, GraduationCap, Library, ShoppingBag } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 
@@ -15,8 +15,8 @@ const Jobs = () => {
   const categories = [
     { id: 'internships', label: 'Internships', icon: GraduationCap },
     { id: 'jobs', label: 'Jobs', icon: Briefcase },
-    { id: 'courses', label: 'Courses', icon: BookOpen },
-    { id: 'shop', label: 'Shop', icon: Store },
+    { id: 'courses', label: 'Courses', icon: Library },
+    { id: 'shop', label: 'Shop', icon: ShoppingBag },
   ];
 
   return (
@@ -84,7 +84,7 @@ const Jobs = () => {
           
           {activeCategory === 'courses' && (
             <>
-              <BookOpen className="w-16 h-16 text-toon-blue/20 mb-4" />
+              <Library className="w-16 h-16 text-toon-blue/20 mb-4" />
               <h3 className="font-medium text-lg">Educational Materials</h3>
               <p className="text-gray-500 text-center max-w-md mt-2">
                 Discover courses to enhance your skills and knowledge.
@@ -94,7 +94,7 @@ const Jobs = () => {
           
           {activeCategory === 'shop' && (
             <>
-              <Store className="w-16 h-16 text-toon-blue/20 mb-4" />
+              <ShoppingBag className="w-16 h-16 text-toon-blue/20 mb-4" />
               <h3 className="font-medium text-lg">Marketplace</h3>
               <p className="text-gray-500 text-center max-w-md mt-2">
                 Shop for professional tools, services, and resources.

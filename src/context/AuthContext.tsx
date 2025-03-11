@@ -1,21 +1,32 @@
 
 import { createContext, useContext, useState, ReactNode } from 'react';
+import { toast } from 'sonner';
 
 interface User {
   username: string;
   name?: string;
   email?: string;
   profilePicture?: string;
+  bio?: string;
+}
+
+interface ProfileUpdate {
+  name?: string;
+  email?: string;
+  bio?: string;
+  profilePicture?: string;
 }
 
 interface AuthContextType {
   login: (username: string, password: string) => void;
   user: User | null;
+  updateUserProfile: (update: ProfileUpdate) => void;
 }
 
 const defaultContext: AuthContextType = {
   login: () => {},
-  user: null
+  user: null,
+  updateUserProfile: () => {}
 };
 
 export const AuthContext = createContext<AuthContextType>(defaultContext);
@@ -44,8 +55,28 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     });
   };
 
+  const updateUserProfile = (update: ProfileUpdate) => {
+    if (!user) return;
+    
+    setUser(prev => {
+      if (!prev) return prev;
+      
+      const updatedUser = { ...prev, ...update };
+      
+      // Save to localStorage for persistence
+      try {
+        localStorage.setItem('currentUser', JSON.stringify(updatedUser));
+      } catch (error) {
+        console.error('Error saving user data:', error);
+      }
+      
+      toast.success("Profile updated successfully");
+      return updatedUser;
+    });
+  };
+
   return (
-    <AuthContext.Provider value={{ login, user }}>
+    <AuthContext.Provider value={{ login, user, updateUserProfile }}>
       {children}
     </AuthContext.Provider>
   );

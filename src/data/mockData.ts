@@ -81,24 +81,182 @@ export const mockUsers: User[] = [
   }
 ];
 
-// Mock posts data
+// Mock posts data with username and profileImage
 export const mockPosts: Post[] = [
-  { id: '1', imageUrl: 'https://i.pravatar.cc/300?img=1', type: 'post', createdAt: '2023-05-01', likes: 120, comments: 14, userId: 'johndoe' },
-  { id: '2', imageUrl: 'https://i.pravatar.cc/300?img=2', type: 'post', createdAt: '2023-05-02', likes: 85, comments: 7, userId: 'johndoe' },
-  { id: '3', imageUrl: 'https://i.pravatar.cc/300?img=3', type: 'post', createdAt: '2023-05-03', likes: 210, comments: 23, userId: 'johndoe' },
-  { id: '4', imageUrl: 'https://i.pravatar.cc/300?img=4', type: 'post', createdAt: '2023-05-04', likes: 97, comments: 9, userId: 'johndoe' },
-  { id: '5', imageUrl: 'https://i.pravatar.cc/300?img=5', type: 'video', createdAt: '2023-05-05', likes: 154, comments: 19, userId: 'johndoe' },
-  { id: '6', imageUrl: 'https://i.pravatar.cc/300?img=6', type: 'video', createdAt: '2023-05-06', likes: 176, comments: 21, userId: 'johndoe' },
-  { id: '7', imageUrl: 'https://i.pravatar.cc/300?img=7', type: 'clip', createdAt: '2023-05-07', likes: 231, comments: 27, userId: 'johndoe' },
-  { id: '8', imageUrl: 'https://i.pravatar.cc/300?img=8', type: 'clip', createdAt: '2023-05-08', likes: 189, comments: 16, userId: 'johndoe' },
+  { 
+    id: '1', 
+    imageUrl: 'https://i.pravatar.cc/300?img=1', 
+    type: 'post', 
+    createdAt: '2023-05-01', 
+    likes: 120, 
+    comments: 14, 
+    userId: 'johndoe',
+    username: 'John Doe',
+    profileImage: 'https://i.pravatar.cc/300?img=11' 
+  },
+  { 
+    id: '2', 
+    imageUrl: 'https://i.pravatar.cc/300?img=2', 
+    type: 'post', 
+    createdAt: '2023-05-02', 
+    likes: 85, 
+    comments: 7, 
+    userId: 'johndoe',
+    username: 'John Doe',
+    profileImage: 'https://i.pravatar.cc/300?img=11'
+  },
+  { 
+    id: '3', 
+    imageUrl: 'https://i.pravatar.cc/300?img=3', 
+    type: 'post', 
+    createdAt: '2023-05-03', 
+    likes: 210, 
+    comments: 23, 
+    userId: 'johndoe',
+    username: 'John Doe',
+    profileImage: 'https://i.pravatar.cc/300?img=11'
+  },
+  { 
+    id: '4', 
+    imageUrl: 'https://i.pravatar.cc/300?img=4', 
+    type: 'post', 
+    createdAt: '2023-05-04', 
+    likes: 97, 
+    comments: 9, 
+    userId: 'johndoe',
+    username: 'John Doe',
+    profileImage: 'https://i.pravatar.cc/300?img=11'
+  },
+  { 
+    id: '5', 
+    imageUrl: 'https://i.pravatar.cc/300?img=5', 
+    videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-tree-with-yellow-flowers-1173-large.mp4',
+    type: 'video', 
+    createdAt: '2023-05-05', 
+    likes: 154, 
+    comments: 19, 
+    userId: 'johndoe',
+    username: 'John Doe',
+    profileImage: 'https://i.pravatar.cc/300?img=11'
+  },
+  { 
+    id: '6', 
+    imageUrl: 'https://i.pravatar.cc/300?img=6', 
+    videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-waves-in-the-water-1164-large.mp4',
+    type: 'video', 
+    createdAt: '2023-05-06', 
+    likes: 176, 
+    comments: 21, 
+    userId: 'johndoe',
+    username: 'John Doe',
+    profileImage: 'https://i.pravatar.cc/300?img=11'
+  },
+  { 
+    id: '7', 
+    imageUrl: 'https://i.pravatar.cc/300?img=7', 
+    videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-girl-in-neon-sign-1232-large.mp4',
+    type: 'clip', 
+    createdAt: '2023-05-07', 
+    likes: 231, 
+    comments: 27, 
+    userId: 'johndoe',
+    username: 'John Doe',
+    profileImage: 'https://i.pravatar.cc/300?img=11'
+  },
+  { 
+    id: '8', 
+    imageUrl: 'https://i.pravatar.cc/300?img=8', 
+    videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-girl-in-neon-sign-1232-large.mp4',
+    type: 'clip', 
+    createdAt: '2023-05-08', 
+    likes: 189, 
+    comments: 16, 
+    userId: 'johndoe',
+    username: 'John Doe',
+    profileImage: 'https://i.pravatar.cc/300?img=11'
+  },
   // Posts for creativecreator
-  { id: '9', imageUrl: 'https://i.pravatar.cc/300?img=10', type: 'post', createdAt: '2023-05-01', likes: 320, comments: 28, userId: 'creativecreator' },
-  { id: '10', imageUrl: 'https://i.pravatar.cc/300?img=12', type: 'video', createdAt: '2023-05-02', likes: 520, comments: 42, userId: 'creativecreator' },
-  { id: '11', imageUrl: 'https://i.pravatar.cc/300?img=14', type: 'clip', createdAt: '2023-05-03', likes: 720, comments: 58, userId: 'creativecreator' },
+  { 
+    id: '9', 
+    imageUrl: 'https://i.pravatar.cc/300?img=10', 
+    type: 'post', 
+    createdAt: '2023-05-01', 
+    likes: 320, 
+    comments: 28, 
+    userId: 'creativecreator',
+    username: 'Creative Creator',
+    profileImage: 'https://i.pravatar.cc/150?img=32'
+  },
+  { 
+    id: '10', 
+    imageUrl: 'https://i.pravatar.cc/300?img=12', 
+    videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-waves-in-the-water-1164-large.mp4',
+    type: 'video', 
+    createdAt: '2023-05-02', 
+    likes: 520, 
+    comments: 42, 
+    userId: 'creativecreator',
+    username: 'Creative Creator',
+    profileImage: 'https://i.pravatar.cc/150?img=32'
+  },
+  { 
+    id: '11', 
+    imageUrl: 'https://i.pravatar.cc/300?img=14', 
+    videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-girl-in-neon-sign-1232-large.mp4',
+    type: 'clip', 
+    createdAt: '2023-05-03', 
+    likes: 720, 
+    comments: 58, 
+    userId: 'creativecreator',
+    username: 'Creative Creator',
+    profileImage: 'https://i.pravatar.cc/150?img=32'
+  },
   // Posts for naturelover
-  { id: '12', imageUrl: 'https://i.pravatar.cc/300?img=20', type: 'post', createdAt: '2023-05-01', likes: 220, comments: 18, userId: 'naturelover' },
-  { id: '13', imageUrl: 'https://i.pravatar.cc/300?img=22', type: 'video', createdAt: '2023-05-02', likes: 420, comments: 32, userId: 'naturelover' },
+  { 
+    id: '12', 
+    imageUrl: 'https://i.pravatar.cc/300?img=20', 
+    type: 'post', 
+    createdAt: '2023-05-01', 
+    likes: 220, 
+    comments: 18, 
+    userId: 'naturelover',
+    username: 'Nature Lover',
+    profileImage: 'https://i.pravatar.cc/150?img=12'
+  },
+  { 
+    id: '13', 
+    imageUrl: 'https://i.pravatar.cc/300?img=22', 
+    videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-waves-in-the-water-1164-large.mp4',
+    type: 'video', 
+    createdAt: '2023-05-02', 
+    likes: 420, 
+    comments: 32, 
+    userId: 'naturelover',
+    username: 'Nature Lover',
+    profileImage: 'https://i.pravatar.cc/150?img=12'
+  },
   // Posts for oceanview
-  { id: '14', imageUrl: 'https://i.pravatar.cc/300?img=30', type: 'post', createdAt: '2023-05-01', likes: 250, comments: 20, userId: 'oceanview' },
-  { id: '15', imageUrl: 'https://i.pravatar.cc/300?img=32', type: 'clip', createdAt: '2023-05-02', likes: 450, comments: 35, userId: 'oceanview' },
+  { 
+    id: '14', 
+    imageUrl: 'https://i.pravatar.cc/300?img=30', 
+    type: 'post', 
+    createdAt: '2023-05-01', 
+    likes: 250, 
+    comments: 20, 
+    userId: 'oceanview',
+    username: 'Ocean View',
+    profileImage: 'https://i.pravatar.cc/150?img=39'
+  },
+  { 
+    id: '15', 
+    imageUrl: 'https://i.pravatar.cc/300?img=32', 
+    videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-girl-in-neon-sign-1232-large.mp4',
+    type: 'clip', 
+    createdAt: '2023-05-02', 
+    likes: 450, 
+    comments: 35, 
+    userId: 'oceanview',
+    username: 'Ocean View', 
+    profileImage: 'https://i.pravatar.cc/150?img=39'
+  },
 ];
