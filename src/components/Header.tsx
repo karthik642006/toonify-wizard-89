@@ -1,7 +1,6 @@
-
 import { AnimatePresence, motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
-import { Sparkles, Search, Bell, X } from 'lucide-react';
+import { Search, Bell, X } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useAuth } from '../context/AuthContext';
@@ -56,27 +55,14 @@ const Header = () => {
       transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
     >
       <div className="container max-w-6xl mx-auto flex justify-between items-center">
-        {/* Profile icon on the left */}
-        <motion.div 
-          className="flex items-center"
-          initial={{ opacity: 0, x: -10 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.1, duration: 0.5 }}
-        >
-          <button 
-            onClick={handleProfileClick} 
-            className="p-2 rounded-full hover:bg-gray-100/50 transition-colors"
-          >
-            <Avatar className="h-7 w-7">
-              <AvatarImage src={user?.profilePicture} alt={user?.name || "Profile"} />
-              <AvatarFallback>{user?.name?.charAt(0) || "U"}</AvatarFallback>
-            </Avatar>
-          </button>
-        </motion.div>
+        {/* App name in center */}
+        <div className="flex-1"></div>
         
-        {/* Search and notification icons on the right */}
+        <div className="text-lg font-bold">CartoonApp</div>
+        
+        {/* Profile icon and actions on the right */}
         <motion.div 
-          className="flex items-center gap-2"
+          className="flex items-center gap-2 flex-1 justify-end"
           initial={{ opacity: 0, x: 10 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.1, duration: 0.5 }}
@@ -95,6 +81,15 @@ const Header = () => {
             {notifications.some(n => !n.read) && (
               <span className="absolute top-0 right-0 h-2 w-2 bg-red-500 rounded-full"></span>
             )}
+          </button>
+          <button 
+            onClick={handleProfileClick} 
+            className="p-2 rounded-full hover:bg-gray-100/50 transition-colors"
+          >
+            <Avatar className="h-7 w-7">
+              <AvatarImage src={user?.profilePicture} alt={user?.name || "Profile"} />
+              <AvatarFallback>{user?.name?.charAt(0) || "U"}</AvatarFallback>
+            </Avatar>
           </button>
         </motion.div>
       </div>

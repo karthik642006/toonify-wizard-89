@@ -1,10 +1,10 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Heart, MessageCircle, X, Send, Play } from 'lucide-react';
 import { toast } from 'sonner';
-import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '../context/AuthContext';
 
@@ -36,7 +36,7 @@ const mockStories = [
 const Story = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, followUser, unfollowUser, isFollowing } = useAuth();
   const [currentStoryIndex, setCurrentStoryIndex] = useState(0);
   const [liked, setLiked] = useState(false);
   const [stories, setStories] = useState<Array<{
@@ -45,26 +45,39 @@ const Story = () => {
     imageUrl: string;
     videoUrl: string | null;
     timestamp: string;
+    profilePicture?: string;
   }>>(mockStories);
   const [showMessageDialog, setShowMessageDialog] = useState(false);
   const [messageText, setMessageText] = useState('');
   const [isPlaying, setIsPlaying] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
   
   // Load user stories from localStorage
   useEffect(() => {
     try {
+      // First load user content that can be shown as stories
+      const userContent = JSON.parse(localStorage.getItem('userContent') || '[]');
       const userStories = JSON.parse(localStorage.getItem('userStories') || '[]');
       
-      if (userStories.length > 0) {
-        const formattedUserStories = userStories.map((story: any) => ({
-          id: story.id,
-          username: user?.username || 'johndoe',
-          imageUrl: story.imageUrl,
-          videoUrl: story.videoUrl || null,
-          timestamp: story.timestamp || 'Just now'
-        }));
-        
-        setStories(prev => [...formattedUserStories, ...prev]);
+      const combinedStories = [...userStories];
+      
+      // Add posts/clips/videos as stories
+      userContent.forEach((content: any) => {
+        // Check if it's already in stories
+        if (!combinedStories.some((story: any) => story.id === content.id)) {
+          combinedStories.push({
+            id: content.id,
+            username: content.userId || user?.username || 'johndoe',
+            imageUrl: content.imageUrl || '',
+            videoUrl: content.videoUrl || null,
+            timestamp: content.createdAt ? new Date(content.createdAt).toLocaleString() : 'Just now',
+            profilePicture: content.profileImage || user?.profilePicture
+          });
+        }
+      });
+      
+      if (combinedStories.length > 0) {
+        setStories(prev => [...combinedStories, ...mockStories]);
       }
     } catch (error) {
       console.error("Error loading user stories:", error);
@@ -87,6 +100,7 @@ const Story = () => {
     if (currentStoryIndex < stories.length - 1) {
       setCurrentStoryIndex(prev => prev + 1);
       setIsPlaying(false);
+      setLiked(false);
     } else {
       handleClose();
     }
@@ -96,6 +110,7 @@ const Story = () => {
     if (currentStoryIndex > 0) {
       setCurrentStoryIndex(prev => prev - 1);
       setIsPlaying(false);
+      setLiked(false);
     }
   };
 
@@ -117,21 +132,32 @@ const Story = () => {
   };
 
   const handlePlayVideo = () => {
-    const video = document.getElementById('story-video') as HTMLVideoElement;
-    if (video) {
+    if (!videoRef.current) return;
+    
+    try {
       if (isPlaying) {
-        video.pause();
+        videoRef.current.pause();
       } else {
-        video.play().catch(err => {
-          console.error("Error playing video:", err);
-          toast.error("Could not play video");
-        });
+        videoRef.current.play();
       }
       setIsPlaying(!isPlaying);
+    } catch (error) {
+      console.error("Error playing video:", error);
+      toast.error("Could not play video");
+    }
+  };
+
+  const handleFollow = () => {
+    const currentStory = stories[currentStoryIndex];
+    if (isFollowing(currentStory.username)) {
+      unfollowUser(currentStory.username);
+    } else {
+      followUser(currentStory.username, currentStory.username, currentStory.profilePicture);
     }
   };
 
   const currentStory = stories[currentStoryIndex];
+  const currentUserIsFollowed = currentStory ? isFollowing(currentStory.username) : false;
 
   return (
     <div className="fixed inset-0 bg-black z-50 flex items-center justify-center">
@@ -179,11 +205,12 @@ const Story = () => {
             currentStory.videoUrl ? (
               <div className="relative h-full w-full">
                 <video 
-                  id="story-video"
+                  ref={videoRef}
                   src={currentStory.videoUrl} 
                   className="h-full w-full object-cover" 
                   onClick={handlePlayVideo}
                   onEnded={handleNextStory}
+                  playsInline
                 />
                 {!isPlaying && (
                   <div className="absolute inset-0 flex items-center justify-center">
@@ -212,7 +239,7 @@ const Story = () => {
             <div className="flex items-center gap-2">
               <div className="w-10 h-10 rounded-full bg-gray-300 overflow-hidden">
                 <img 
-                  src={`https://i.pravatar.cc/40?u=${currentStory?.username}`} 
+                  src={currentStory?.profilePicture || `https://i.pravatar.cc/40?u=${currentStory?.username}`} 
                   alt={currentStory?.username} 
                   className="w-full h-full object-cover"
                 />
@@ -222,7 +249,15 @@ const Story = () => {
                 <p className="text-white/70 text-xs">{currentStory?.timestamp}</p>
               </div>
             </div>
-            <div className="flex gap-4">
+            <div className="flex items-center gap-4">
+              {currentStory && currentStory.username !== user?.username && (
+                <button 
+                  className={`px-3 py-1 rounded-full text-xs ${currentUserIsFollowed ? 'bg-white/20 text-white' : 'bg-white text-black'}`}
+                  onClick={handleFollow}
+                >
+                  {currentUserIsFollowed ? 'Following' : 'Follow'}
+                </button>
+              )}
               <button 
                 className="text-white p-2"
                 onClick={handleLike}
@@ -254,6 +289,7 @@ const Story = () => {
       <Dialog open={showMessageDialog} onOpenChange={setShowMessageDialog}>
         <DialogContent className="sm:max-w-md">
           <DialogTitle>Send message to {currentStory?.username}</DialogTitle>
+          <DialogDescription className="sr-only">Send a direct message</DialogDescription>
           <div className="space-y-4">
             <div className="flex gap-2">
               <input 

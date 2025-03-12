@@ -3,10 +3,9 @@ import { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import BottomNavigation from '../components/BottomNavigation';
-import { Heart, Share, MessageCircle, MoreVertical, BookmarkPlus } from 'lucide-react';
+import { Heart, Share, MessageCircle, MoreVertical, BookmarkPlus, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { toast } from 'sonner';
 import { useAuth } from '../context/AuthContext';
@@ -56,8 +55,13 @@ const Clips = () => {
   const [moreOptionsOpen, setMoreOptionsOpen] = useState(false);
   const [commentText, setCommentText] = useState('');
   const [comments, setComments] = useState<{username: string, text: string}[]>([]);
+  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [caption, setCaption] = useState('');
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
-  const { user } = useAuth();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { user, followUser, unfollowUser, isFollowing } = useAuth();
   const navigate = useNavigate();
 
   // Try to load user content at initialization
@@ -71,7 +75,7 @@ const Clips = () => {
         const formattedUserClips = userClips.map((clip: any) => ({
           id: clip.id,
           videoUrl: clip.videoUrl || clip.imageUrl,
-          username: clip.username || user?.username || 'User',
+          username: clip.userId || user?.username || 'User',
           profileImage: clip.profileImage || user?.profilePicture || 'https://i.pravatar.cc/150?img=11',
           likes: clip.likes || 0,
           comments: clip.comments || 0,
@@ -87,6 +91,16 @@ const Clips = () => {
       console.error("Error loading user clips:", error);
     }
   }, [user]);
+
+  // Update isFollowing status based on auth context
+  useEffect(() => {
+    if (user) {
+      setClips(prevClips => prevClips.map(clip => ({
+        ...clip,
+        isFollowing: isFollowing(clip.username)
+      })));
+    }
+  }, [user, isFollowing]);
 
   // Handle swipe up to next clip
   const handleSwipeUp = () => {
@@ -145,24 +159,34 @@ const Clips = () => {
   // Follow functionality
   const handleFollow = (clipId: string, event: React.MouseEvent) => {
     event.stopPropagation();
-    setClips(prevClips => prevClips.map(clip => {
-      if (clip.id === clipId) {
-        return {
-          ...clip,
-          followers: clip.isFollowing ? clip.followers - 1 : clip.followers + 1,
-          isFollowing: !clip.isFollowing
-        };
-      }
-      return clip;
-    }));
     
     const clip = clips.find(c => c.id === clipId);
-    if (clip) {
-      toast.success(clip.isFollowing ? "Unfollowed" : "Followed", {
-        description: clip.isFollowing ? 
-          `You have unfollowed ${clip.username}` : 
-          `You are now following ${clip.username}`
-      });
+    if (!clip) return;
+    
+    if (isFollowing(clip.username)) {
+      unfollowUser(clip.username);
+      
+      setClips(prevClips => prevClips.map(c => {
+        if (c.id === clipId) {
+          return {
+            ...c,
+            isFollowing: false
+          };
+        }
+        return c;
+      }));
+    } else {
+      followUser(clip.username, clip.username, clip.profileImage);
+      
+      setClips(prevClips => prevClips.map(c => {
+        if (c.id === clipId) {
+          return {
+            ...c,
+            isFollowing: true
+          };
+        }
+        return c;
+      }));
     }
   };
 
@@ -232,9 +256,92 @@ const Clips = () => {
     }
   };
 
+  // Handle upload click
+  const handleUploadClick = () => {
+    setUploadDialogOpen(true);
+  };
+
+  // Handle file selection
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setSelectedFile(file);
+      
+      // Create a preview URL
+      const url = URL.createObjectURL(file);
+      setPreviewUrl(url);
+    }
+  };
+
+  // Handle clip upload
+  const handleClipUpload = () => {
+    if (!selectedFile || !previewUrl) {
+      toast.error("Please select a file first");
+      return;
+    }
+    
+    try {
+      const newClip = {
+        id: Date.now().toString(),
+        videoUrl: previewUrl,
+        username: user?.username || 'User',
+        profileImage: user?.profilePicture || 'https://i.pravatar.cc/150?img=11',
+        likes: 0,
+        comments: 0,
+        isLiked: false,
+        followers: 0,
+        isFollowing: false,
+        type: 'clip',
+        userId: user?.username || 'User',
+        caption: caption,
+        createdAt: new Date().toISOString()
+      };
+      
+      // Add to clips list
+      setClips(prevClips => [newClip, ...prevClips]);
+      
+      // Add to user content in localStorage
+      const userContent = JSON.parse(localStorage.getItem('userContent') || '[]');
+      userContent.unshift({
+        id: newClip.id,
+        videoUrl: previewUrl,
+        type: 'clip',
+        createdAt: new Date().toISOString(),
+        likes: 0,
+        comments: 0,
+        userId: user?.username || 'User',
+        username: user?.name || user?.username || 'User',
+        profileImage: user?.profilePicture || 'https://i.pravatar.cc/150?img=11',
+        caption: caption
+      });
+      localStorage.setItem('userContent', JSON.stringify(userContent));
+      
+      toast.success("Clip uploaded successfully!");
+      
+      // Reset form
+      setSelectedFile(null);
+      setPreviewUrl(null);
+      setCaption('');
+      setUploadDialogOpen(false);
+    } catch (error) {
+      console.error("Error uploading clip:", error);
+      toast.error("Failed to upload clip");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-black">
       <main className="h-screen relative overflow-hidden">
+        {/* Upload button */}
+        <div className="absolute top-4 right-4 z-50">
+          <Button 
+            onClick={handleUploadClick}
+            className="bg-toon-blue hover:bg-toon-blue/90 rounded-full p-3"
+          >
+            <Upload className="h-5 w-5" />
+          </Button>
+        </div>
+        
         {clips.length > 0 ? (
           <motion.div 
             className="h-full w-full relative overflow-hidden"
@@ -439,6 +546,84 @@ const Clips = () => {
                 {option}
               </Button>
             ))}
+          </div>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Upload Dialog */}
+      <Dialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogTitle>Upload Clip</DialogTitle>
+          <DialogDescription>Share a new clip with your followers</DialogDescription>
+          <div className="space-y-4">
+            {previewUrl ? (
+              <div className="relative rounded-lg overflow-hidden aspect-video">
+                <video 
+                  src={previewUrl} 
+                  className="w-full h-full object-cover" 
+                  controls
+                />
+                <Button 
+                  variant="destructive" 
+                  size="sm" 
+                  className="absolute top-2 right-2"
+                  onClick={() => {
+                    setSelectedFile(null);
+                    setPreviewUrl(null);
+                  }}
+                >
+                  Remove
+                </Button>
+              </div>
+            ) : (
+              <div 
+                className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <Upload className="w-10 h-10 mx-auto text-gray-400 mb-2" />
+                <p className="text-sm text-gray-600">Click to select a video file</p>
+                <input 
+                  type="file" 
+                  accept="video/*" 
+                  className="hidden" 
+                  ref={fileInputRef}
+                  onChange={handleFileSelect}
+                />
+              </div>
+            )}
+            
+            <div>
+              <label htmlFor="caption" className="block text-sm font-medium mb-1">Caption</label>
+              <textarea
+                id="caption"
+                value={caption}
+                onChange={(e) => setCaption(e.target.value)}
+                placeholder="Write a caption..."
+                className="w-full p-2 border rounded-md resize-none h-20"
+              />
+            </div>
+            
+            <div className="flex justify-end pt-2">
+              <Button 
+                variant="ghost" 
+                onClick={() => {
+                  setSelectedFile(null);
+                  setPreviewUrl(null);
+                  setCaption('');
+                  setUploadDialogOpen(false);
+                }}
+                className="mr-2"
+              >
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleClipUpload}
+                disabled={!selectedFile}
+                className="bg-toon-blue hover:bg-toon-blue/90"
+              >
+                Upload
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>

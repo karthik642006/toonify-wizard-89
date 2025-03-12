@@ -8,7 +8,7 @@ import { useAuth } from '../context/AuthContext';
 
 export const useProfileData = (username?: string) => {
   const navigate = useNavigate();
-  const { user, updateUserProfile } = useAuth();
+  const { user, updateUserProfile, followUser, unfollowUser, isFollowing } = useAuth();
   
   const [showFollowDialog, setShowFollowDialog] = useState(false);
   const [followType, setFollowType] = useState<'followers' | 'following'>('followers');
@@ -31,12 +31,22 @@ export const useProfileData = (username?: string) => {
     // Use a try-catch block to handle potential errors
     try {
       const targetUsername = username || (user?.username || 'johndoe');
-      const foundUser = mockUsers.find(u => u.username === targetUsername);
+      let foundUser = mockUsers.find(u => u.username === targetUsername);
+      
+      // If viewing the logged-in user's profile, use auth context data
+      if (!username || (user && targetUsername === user.username)) {
+        foundUser = {
+          ...(foundUser || {}),
+          ...user,
+          followers: user?.followers || [],
+          following: user?.following || [],
+        } as User;
+      }
       
       if (foundUser) {
         setUserProfile(foundUser);
-        setProfileName(foundUser.name);
-        setProfileEmail(foundUser.email);
+        setProfileName(foundUser.name || foundUser.username);
+        setProfileEmail(foundUser.email || '');
         setProfileBio(foundUser.bio || '');
         setProfilePicture(foundUser.profilePicture || null);
         
@@ -47,7 +57,7 @@ export const useProfileData = (username?: string) => {
         try {
           const userContent = JSON.parse(localStorage.getItem('userContent') || '[]');
           const userSpecificContent = userContent.filter((item: Post) => 
-            item.userId === foundUser.username || (!username && item.userId === 'johndoe')
+            item.userId === foundUser.username || (!username && item.userId === user?.username)
           );
           
           setUserPosts([...userSpecificContent, ...posts]);
@@ -151,6 +161,18 @@ export const useProfileData = (username?: string) => {
       .then(() => toast.success('Profile link copied to clipboard!'))
       .catch(err => toast.error('Could not copy the profile link'));
   };
+  
+  const handleFollow = (userId: string, userName: string, userAvatar?: string) => {
+    if (followUser) {
+      followUser(userId, userName, userAvatar);
+    }
+  };
+  
+  const handleUnfollow = (userId: string) => {
+    if (unfollowUser) {
+      unfollowUser(userId);
+    }
+  };
 
   return {
     profileName,
@@ -186,5 +208,8 @@ export const useProfileData = (username?: string) => {
     handleClearImage,
     handleOpenSettings,
     handleShareProfile,
+    handleFollow,
+    handleUnfollow,
+    isFollowing
   };
 };

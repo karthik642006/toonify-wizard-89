@@ -8,6 +8,8 @@ interface User {
   email?: string;
   profilePicture?: string;
   bio?: string;
+  followers?: {id: string, name: string, avatar?: string}[];
+  following?: {id: string, name: string, avatar?: string}[];
 }
 
 interface ProfileUpdate {
@@ -15,18 +17,26 @@ interface ProfileUpdate {
   email?: string;
   bio?: string;
   profilePicture?: string;
+  followers?: {id: string, name: string, avatar?: string}[];
+  following?: {id: string, name: string, avatar?: string}[];
 }
 
 interface AuthContextType {
   login: (username: string, password: string) => void;
   user: User | null;
   updateUserProfile: (update: ProfileUpdate) => void;
+  followUser: (userId: string, userName: string, userAvatar?: string) => void;
+  unfollowUser: (userId: string) => void;
+  isFollowing: (userId: string) => boolean;
 }
 
 const defaultContext: AuthContextType = {
   login: () => {},
   user: null,
-  updateUserProfile: () => {}
+  updateUserProfile: () => {},
+  followUser: () => {},
+  unfollowUser: () => {},
+  isFollowing: () => false
 };
 
 export const AuthContext = createContext<AuthContextType>(defaultContext);
@@ -52,7 +62,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           username: 'johndoe',
           name: 'John Doe',
           email: 'john@example.com',
-          profilePicture: 'https://i.pravatar.cc/300?img=11'
+          profilePicture: 'https://i.pravatar.cc/300?img=11',
+          followers: [],
+          following: []
         };
         setUser(defaultUser);
         localStorage.setItem('currentUser', JSON.stringify(defaultUser));
@@ -64,7 +76,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         username: 'johndoe',
         name: 'John Doe',
         email: 'john@example.com',
-        profilePicture: 'https://i.pravatar.cc/300?img=11'
+        profilePicture: 'https://i.pravatar.cc/300?img=11',
+        followers: [],
+        following: []
       });
     }
   }, []);
@@ -75,7 +89,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       username,
       name: username === 'johndoe' ? 'John Doe' : username,
       email: `${username}@example.com`,
-      profilePicture: 'https://i.pravatar.cc/300?img=11'
+      profilePicture: 'https://i.pravatar.cc/300?img=11',
+      followers: [],
+      following: []
     };
     
     setUser(newUser);
@@ -108,8 +124,71 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     });
   };
 
+  const followUser = (userId: string, userName: string, userAvatar?: string) => {
+    if (!user) return;
+
+    setUser(prev => {
+      if (!prev) return prev;
+      
+      // Check if already following
+      if (prev.following?.some(f => f.id === userId)) {
+        return prev;
+      }
+      
+      const newFollowing = [...(prev.following || []), {
+        id: userId,
+        name: userName,
+        avatar: userAvatar
+      }];
+      
+      const updatedUser = {
+        ...prev,
+        following: newFollowing
+      };
+      
+      // Save to localStorage
+      localStorage.setItem('currentUser', JSON.stringify(updatedUser));
+      
+      toast.success(`You are now following ${userName}`);
+      return updatedUser;
+    });
+  };
+
+  const unfollowUser = (userId: string) => {
+    if (!user) return;
+
+    setUser(prev => {
+      if (!prev) return prev;
+      
+      const updatedFollowing = prev.following?.filter(f => f.id !== userId) || [];
+      
+      const updatedUser = {
+        ...prev,
+        following: updatedFollowing
+      };
+      
+      // Save to localStorage
+      localStorage.setItem('currentUser', JSON.stringify(updatedUser));
+      
+      toast.success("Unfollowed successfully");
+      return updatedUser;
+    });
+  };
+
+  const isFollowing = (userId: string): boolean => {
+    if (!user || !user.following) return false;
+    return user.following.some(f => f.id === userId);
+  };
+
   return (
-    <AuthContext.Provider value={{ login, user, updateUserProfile }}>
+    <AuthContext.Provider value={{ 
+      login, 
+      user, 
+      updateUserProfile,
+      followUser,
+      unfollowUser,
+      isFollowing
+    }}>
       {children}
     </AuthContext.Provider>
   );
