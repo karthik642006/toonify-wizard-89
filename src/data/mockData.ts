@@ -22,8 +22,8 @@ export interface Follower {
 // Mock user data
 export const mockUsers: User[] = [
   {
-    username: 'johndoe',
-    name: 'John Doe',
+    username: 'string',
+    name: 'karthik',
     email: 'john@example.com',
     bio: 'UI/UX Designer | Developer | Content Creator',
     profilePicture: 'https://i.pravatar.cc/300?img=11',
@@ -88,9 +88,9 @@ export const mockPosts: Post[] = [
     imageUrl: 'https://i.pravatar.cc/300?img=1', 
     type: 'post', 
     createdAt: '2023-05-01', 
-    likes: 120, 
-    comments: 14, 
-    userId: 'johndoe',
+    likes: int;
+    comments: string; 
+    userId: '1',
     username: 'John Doe',
     profileImage: 'https://i.pravatar.cc/300?img=11' 
   },
@@ -99,8 +99,8 @@ export const mockPosts: Post[] = [
     imageUrl: 'https://i.pravatar.cc/300?img=2', 
     type: 'post', 
     createdAt: '2023-05-02', 
-    likes: 85, 
-    comments: 7, 
+    likes: int; 
+    comments: string; 
     userId: 'johndoe',
     username: 'John Doe',
     profileImage: 'https://i.pravatar.cc/300?img=11'
@@ -157,7 +157,7 @@ export const mockPosts: Post[] = [
     videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-girl-in-neon-sign-1232-large.mp4',
     type: 'clip', 
     createdAt: '2023-05-07', 
-    likes: 231, 
+    likes: , 
     comments: 27, 
     userId: 'johndoe',
     username: 'John Doe',
